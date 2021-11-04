@@ -1,14 +1,14 @@
 package target;
 
-import java.sql.Time;
 import java.time.Duration;
 import java.util.HashSet;
 import java.util.Set;
 
 public class Target {
-    static public enum RuntimeStatus { FROZEN, SKIPPED, WAITING, IN_PROCESS, FINISHED}
-    static public enum ResultStatus { SUCCESS, WARNING, FAILURE, FROZEN }
+    static public enum RuntimeStatus { Frozen, Skipped, Waiting, InProcess, Finished }
+    static public enum ResultStatus { Success, Warning, Failure, Frozen }
     static public enum TargetProperty { LEAF, MIDDLE, ROOT, INDEPENDENT }
+    static public enum Connection { REQUIRED_FOR, DEPENDS_ON }
 
     private Set<Target> dependsOnTargets;
     private Set<Target> requireForTargets;
@@ -18,9 +18,18 @@ public class Target {
     private TargetProperty targetProperty;
     private String targetName;
     private String extraInformation;
+    private Boolean wasVisited;
 
     public Duration getResultTime() {
         return resultTime;
+    }
+
+    public void setWasVisited(Boolean wasVisited) {
+        this.wasVisited = wasVisited;
+    }
+
+    public Boolean getWasVisited() {
+        return wasVisited;
     }
 
     public void setResultTime(Duration resultTime) {
@@ -46,10 +55,11 @@ public class Target {
     public Target() {
         this.dependsOnTargets = new HashSet<>();
         this.requireForTargets = new HashSet<>();
-        this.runtimeStatus = RuntimeStatus.WAITING;
-        this.resultStatus = ResultStatus.FROZEN;
+        this.runtimeStatus = RuntimeStatus.Waiting;
+        this.resultStatus = ResultStatus.Frozen;
         this.resultTime = Duration.ZERO;
         this.targetProperty = TargetProperty.INDEPENDENT;
+        this.wasVisited=false;
     }
 
     public Set<Target> getDependsOnTargets() {
@@ -91,4 +101,6 @@ public class Target {
     public void setTargetProperty(TargetProperty targetProperty) {
         this.targetProperty = targetProperty;
     }
+
+
 }
