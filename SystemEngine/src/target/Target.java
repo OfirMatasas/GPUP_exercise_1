@@ -102,5 +102,7 @@ public class Target {
         this.targetProperty = targetProperty;
     }
 
+    public void addToDependsOn(Target dependsOn) { dependsOnTargets.add(dependsOn); }
 
+    public void addToRequiredFor(Target requiredFor) { requireForTargets.add(requiredFor); }
 }

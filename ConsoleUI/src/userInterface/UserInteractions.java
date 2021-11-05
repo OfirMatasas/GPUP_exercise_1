@@ -5,29 +5,26 @@ import target.Target;
 import task.SimulationTask;
 import task.Task;
 import task.TaskParameters;
-
-import javax.sound.midi.Soundbank;
-import java.sql.SQLOutput;
-import java.sql.Time;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Random;
 import java.util.Scanner;
-import java.util.concurrent.TimeUnit;
 
 public class UserInteractions implements OutputInterface, InputInterface {
     Scanner scanner = new Scanner(System.in);
-    Graph targetsGraph;
+    Graph targetsGraph = new Graph();
     Task runningTask = new SimulationTask();
 
     public void SystemExecute()
     {
         System.out.println("Welcome to our project!");
         int userSelection = 0;
+        initGraph();
 
-        do {
+        while (userSelection != 6)
+        {
             printMenu();
             userSelection = getUserSelectionFromMenu();
 
@@ -58,17 +55,12 @@ public class UserInteractions implements OutputInterface, InputInterface {
                     executeTask();
                     break;
                 }
-
-
+                case 6:
+                {
+                    break;
+                }
             }
-            System.out.println("1. Load system details from file.");
-            System.out.println("2. Show graph details.");
-            System.out.println("3. Show target details.");
-            System.out.println("4. Find connection between 2 targets.");
-            System.out.println("5. Execute task.");
-            System.out.println("6. Exit.");
-
-        }while (userSelection != 0);
+        }
     }
 
     private void executeTask()
@@ -290,17 +282,40 @@ public class UserInteractions implements OutputInterface, InputInterface {
 
     public void printGraphInformation()
     {// remember to add condition of if invalid file
-
-        Map<Target.TargetProperty, Integer> graphDetails = targetsGraph.getGraphDetails();
         Map<String,Target> graphTargets = targetsGraph.getGraphTargets();
 
         System.out.println("Number of targets : " + graphTargets.size());
-        System.out.println("Number of leaves targets : " + graphDetails.get(Target.TargetProperty.LEAF));
-        System.out.println("Number of roots targets : " + graphDetails.get(Target.TargetProperty.ROOT));
-        System.out.println("Number of middles targets : " + graphDetails.get(Target.TargetProperty.MIDDLE));
-        System.out.println("Number of independents targets : " + graphDetails.get(Target.TargetProperty.INDEPENDENT));
-
+        System.out.println("Number of leaf targets : " + targetsGraph.numberOfTargetsByProperty(Target.TargetProperty.LEAF));
+        System.out.println("Number of root targets : " + targetsGraph.numberOfTargetsByProperty(Target.TargetProperty.ROOT));
+        System.out.println("Number of middle targets : " + targetsGraph.numberOfTargetsByProperty(Target.TargetProperty.MIDDLE));
+        System.out.println("Number of independent targets : " + targetsGraph.numberOfTargetsByProperty(Target.TargetProperty.INDEPENDENT));
     }
 
+    public void initGraph()
+    {
+        Target target1 = new Target(), target2 = new Target(), target3 = new Target(), target4 = new Target();
+
+        target1.setTargetName("A");
+        target1.setExtraInformation("The root of the graph.");
+        target1.addToRequiredFor(target2);
+        target1.addToRequiredFor(target3);
+
+        target2.setTargetName("B");
+        target2.setExtraInformation("First son of A");
+        target2.addToDependsOn(target1);
+        target2.addToRequiredFor(target4);
+
+        target3.setTargetName("C");
+        target3.setExtraInformation("Second son of A");
+        target3.addToDependsOn(target1);
+        target3.addToRequiredFor(target4);
+
+        target4.setTargetName("D");
+        target4.setExtraInformation("The leaf of the graph");
+        target4.addToDependsOn(target2);
+        target4.addToDependsOn(target3);
+
+        targetsGraph.addNewTargetToTheGraph(target1, target2, target3, target4);
+    }
 
 }

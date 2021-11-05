@@ -1,52 +1,35 @@
 package target;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class Graph {
     private Map<String, Target> graphTargets;
+    private Map<Target.TargetProperty, Set<Target>> targetsByProperties;
 
-    public Map<Target.TargetProperty, Integer> getGraphDetails() {
-        return graphDetails;
+    public Graph() {
+        this.graphTargets = new HashMap<>();
+
+        this.targetsByProperties = new HashMap<>();
+        targetsByProperties.put(Target.TargetProperty.LEAF, new HashSet<>());
+        targetsByProperties.put(Target.TargetProperty.INDEPENDENT, new HashSet<>());
+        targetsByProperties.put(Target.TargetProperty.ROOT, new HashSet<>());
+        targetsByProperties.put(Target.TargetProperty.MIDDLE, new HashSet<>());
     }
 
-    private Map<Target.TargetProperty, Integer> graphDetails;
+    public int numberOfTargetsByProperty(Target.TargetProperty property)
+    {
+        return targetsByProperties.get(property).size();
+    }
 
     public Map<String, Target> getGraphTargets() {
         return graphTargets;
     }
 
-    public Graph() {
-        this.graphTargets = new HashMap<>();
-        graphDetails.put(Target.TargetProperty.ROOT,0);
-        graphDetails.put(Target.TargetProperty.LEAF,0);
-        graphDetails.put(Target.TargetProperty.MIDDLE,0);
-        graphDetails.put(Target.TargetProperty.INDEPENDENT,0);
-    }
+    public void addNewTargetToTheGraph(Target... newTargets) {
+        for(Target currentTarget : newTargets)
+            graphTargets.put(currentTarget.getTargetName(), currentTarget);
 
-    public void countPropertiesInGraph()
-    {// remember to add condition of if invalid file
-        Integer curValue=0;
-        for(Target curTarget : graphTargets.values())
-        {
-            switch (curTarget.getTargetProperty()) {
-                case LEAF:
-                    curValue = graphDetails.get(Target.TargetProperty.LEAF);
-                    break;
-                case ROOT:
-                    curValue = graphDetails.get(Target.TargetProperty.ROOT);
-                    break;
-                case MIDDLE:
-                    curValue = graphDetails.get(Target.TargetProperty.MIDDLE);
-                    break;
-                case INDEPENDENT:
-                    curValue = graphDetails.get(Target.TargetProperty.INDEPENDENT);
-                    break;
-            }
-            curValue++;
-        }
+        calculateProperties();
     }
 
     public Boolean prechecksForTargetsConnection(String src, String dest)
@@ -96,5 +79,42 @@ public class Graph {
         }
 
         return currentPath;
+    }
+
+    private void calculateProperties()
+    {
+        clearTargetsByProperties();
+        Integer valCount = 0;
+        Target.TargetProperty currentTargetProperty;
+
+        for(Target currentTarget : graphTargets.values())
+        {
+            if(currentTarget.getRequireForTargets().size() == 0 && currentTarget.getDependsOnTargets().size() == 0)
+            {//Independent
+                currentTargetProperty = Target.TargetProperty.INDEPENDENT;
+            }
+            else if(currentTarget.getRequireForTargets().size() == 0)
+            {//Leaf
+                currentTargetProperty = Target.TargetProperty.LEAF;
+            }
+            else if(currentTarget.getDependsOnTargets().size() == 0)
+            {//Root
+                currentTargetProperty = Target.TargetProperty.ROOT;
+            }
+            else
+            {//Middle
+                currentTargetProperty = Target.TargetProperty.MIDDLE;
+            }
+            targetsByProperties.get(currentTargetProperty).add(currentTarget);
+        }
+
+    }
+
+    private void clearTargetsByProperties()
+    {
+        targetsByProperties.get(Target.TargetProperty.ROOT).clear();
+        targetsByProperties.get(Target.TargetProperty.MIDDLE).clear();
+        targetsByProperties.get(Target.TargetProperty.LEAF).clear();
+        targetsByProperties.get(Target.TargetProperty.INDEPENDENT).clear();
     }
 }
