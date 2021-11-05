@@ -11,5 +11,9 @@ public interface OutputInterface {
     public void printTargetExtraInformation(Target target);
     public void printGraphInformation();
     public void printTargetConnectionStatus();
+    public void exitFromSystem();
     public void printExceptionInformation(String message);
+    public void printTargetsSummary();
+    public void printTaskSummary();
+    public void printTotalExecutionTime();
 }

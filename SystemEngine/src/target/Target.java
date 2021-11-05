@@ -105,4 +105,14 @@ public class Target {
     public void addToDependsOn(Target dependsOn) { dependsOnTargets.add(dependsOn); }
 
     public void addToRequiredFor(Target requiredFor) { requireForTargets.add(requiredFor); }
+
+    public void setAllDependsOnTargetsOnFrozen()
+    {
+        for(Target currentTarget : dependsOnTargets)
+        {
+            currentTarget.setRuntimeStatus(RuntimeStatus.Frozen);
+            currentTarget.setResultStatus(ResultStatus.Frozen);
+            currentTarget.setAllDependsOnTargetsOnFrozen();
+        }
+    }
 }

@@ -8,7 +8,6 @@ public class Graph {
 
     public Graph() {
         this.graphTargets = new HashMap<>();
-
         this.targetsByProperties = new HashMap<>();
         targetsByProperties.put(Target.TargetProperty.LEAF, new HashSet<>());
         targetsByProperties.put(Target.TargetProperty.INDEPENDENT, new HashSet<>());
@@ -106,6 +105,7 @@ public class Graph {
                 currentTargetProperty = Target.TargetProperty.MIDDLE;
             }
             targetsByProperties.get(currentTargetProperty).add(currentTarget);
+            currentTarget.setTargetProperty(currentTargetProperty);
         }
 
     }
@@ -116,5 +116,23 @@ public class Graph {
         targetsByProperties.get(Target.TargetProperty.MIDDLE).clear();
         targetsByProperties.get(Target.TargetProperty.LEAF).clear();
         targetsByProperties.get(Target.TargetProperty.INDEPENDENT).clear();
+    }
+
+    public void setAllTargetResultStatusToDefault()
+    {
+        for(Target currentTarget : graphTargets.values())
+            currentTarget.setResultStatus(Target.ResultStatus.Frozen);
+    }
+
+    public void setAllTargetruntimeStatusToDefault()
+    {
+        for(Target currentTarget : graphTargets.values())
+            currentTarget.setRuntimeStatus(Target.RuntimeStatus.Waiting);
+    }
+
+    public void setAllTargetWasVisitedToDefault()
+    {
+        for(Target currentTarget : graphTargets.values())
+            currentTarget.setWasVisited(false);
     }
 }

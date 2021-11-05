@@ -6,6 +6,7 @@ import task.SimulationTask;
 import task.Task;
 import task.TaskParameters;
 import java.time.Duration;
+import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Map;
@@ -57,6 +58,7 @@ public class UserInteractions implements OutputInterface, InputInterface {
                 }
                 case 6:
                 {
+                    exitFromSystem();
                     break;
                 }
             }
@@ -66,22 +68,27 @@ public class UserInteractions implements OutputInterface, InputInterface {
     private void executeTask()
     {
         getTaskParametersFromUser();
+        runningTask.startTheClock();
 
+        System.out.println("---------------------------------------");
         for(Target currentTarget : targetsGraph.getGraphTargets().values())
         {
             System.out.println("Task on target " + currentTarget.getTargetName() + " just started.");
+
             System.out.println("Target's extra information: " + currentTarget.getExtraInformation());
             executeTaskOnTarget(currentTarget);
-            System.out.println("Task on target " + currentTarget.getTargetName() + " just ended.");
+
+            System.out.println("---------------------------------------");
         }
-
-
+        runningTask.stopTheClock();
+        printTaskSummary();
     }
+
 
     private void executeTaskOnTarget(Target target)
     {
         TaskParameters taskParameters = runningTask.getTargetsParameters().get(target);
-        Duration processingTime = null;
+        Duration processingTime = runningTask.getTargetsParameters().get(target).getProcessingTime();
         Random rand = new Random();
 
         if(taskParameters.getRandom())
@@ -92,30 +99,33 @@ public class UserInteractions implements OutputInterface, InputInterface {
             processingTime = Duration.of(newTime, ChronoUnit.MILLIS);
         }
 
-        System.out.println("Starting task on target " + target.getTargetName());
-
-        System.out.println("The system is going to sleep for " + processingTime.toMillis() + "m/s.");
+        System.out.format("The system is going to sleep for %02d:%02d:%02d\n", processingTime.toHours(), processingTime.toMinutes(), processingTime.getSeconds());
         runningTask.executeTaskOnTarget(target);
-        System.out.println("The system went to sleep for " + processingTime.toMillis() + "m/s.");
+        System.out.format("The system went to sleep for %02d:%02d:%02d\n", processingTime.toHours(), processingTime.toMinutes(), processingTime.getSeconds());
 
         System.out.println("Task on target " + target.getTargetName() + " ended.");
         System.out.println("The result: " + target.getResultStatus().toString() + ".");
-
     }
 
     private void getTaskParametersFromUser() {
-        Duration processingTime = null;
+        Duration processingTime=null;
         long timeInMS = 0;
         Boolean isRandom = true;
+        int randomTmp;
         Double successRate = 0.0, successWithWarnings = 0.0;
-        TaskParameters taskParameters = null;
+        TaskParameters taskParameters = new TaskParameters();
 
-        System.out.print("Enter the processing time (in secs) for each task: ");
+        System.out.print("Enter the processing time (in m/s) for each task: ");
         timeInMS = scanner.nextInt();
         processingTime = Duration.of(timeInMS, ChronoUnit.MILLIS);
 
         System.out.print("Choose if the processing time is limited by the value you just entered, or permanent (0 - limited, 1 - permanent): ");
-        isRandom = scanner.nextBoolean();
+        randomTmp=scanner.nextInt();
+
+        if(randomTmp==0)
+            isRandom=true;
+        else
+            isRandom=false;
 
         System.out.print("Enter the success rate of the task (value between 0 and 1): ");
         successRate = scanner.nextDouble();
@@ -148,7 +158,7 @@ public class UserInteractions implements OutputInterface, InputInterface {
         }
 
         System.out.print("Enter target's name: ");
-        String targetName = scanner.nextLine();
+        String targetName = scanner.next();
         if(targetsGraph.getGraphTargets().containsKey(targetName))
         {
             Target selectedTarget = targetsGraph.getGraphTargets().get(targetName);
@@ -171,6 +181,7 @@ public class UserInteractions implements OutputInterface, InputInterface {
             System.out.println("List of depends-on-targets: ");
             for(Target currentTarget : target.getDependsOnTargets())
                 System.out.print(currentTarget.getTargetName() + " ");
+            System.out.println();
         }
     }
 
@@ -183,6 +194,7 @@ public class UserInteractions implements OutputInterface, InputInterface {
             System.out.println("List of required-for-targets: ");
             for(Target currentTarget : target.getRequireForTargets())
                 System.out.print(currentTarget.getTargetName() + " ");
+            System.out.println();
         }
     }
 
@@ -277,8 +289,40 @@ public class UserInteractions implements OutputInterface, InputInterface {
     }
 
     @Override
+    public void exitFromSystem() {
+        System.exit(0);
+    }
+
+    @Override
     public void printExceptionInformation(String message) {
     }
+
+    @Override
+    public void printTargetsSummary()
+    {
+        Duration time;
+        for(Target curTarget: targetsGraph.getGraphTargets().values())
+        {
+            time = curTarget.getResultTime();
+            System.out.println("Target's name :" + curTarget.getTargetName());
+            System.out.println("Target's result status :" + curTarget.getResultStatus());
+            System.out.format("Target's running time: %02d:%02d:%02d\n", time.toHours(), time.toMinutes(), time.getSeconds());
+        }
+    }
+
+    @Override
+    public void printTaskSummary()
+    {
+        printTotalExecutionTime();
+        printTargetsSummary();
+    }
+
+    public void printTotalExecutionTime()
+    {
+        Duration totalTimeOfTask = runningTask.getTotalTimeSpentOnTask();
+        System.out.format("Total execution time for the task: %02d:%02d:%02d\n", totalTimeOfTask.toHours(), totalTimeOfTask.toMinutes(), totalTimeOfTask.getSeconds());
+    }
+
 
     public void printGraphInformation()
     {// remember to add condition of if invalid file
@@ -294,6 +338,7 @@ public class UserInteractions implements OutputInterface, InputInterface {
     public void initGraph()
     {
         Target target1 = new Target(), target2 = new Target(), target3 = new Target(), target4 = new Target();
+        Target target5 = new Target(), target6 = new Target();
 
         target1.setTargetName("A");
         target1.setExtraInformation("The root of the graph.");
@@ -311,11 +356,19 @@ public class UserInteractions implements OutputInterface, InputInterface {
         target3.addToRequiredFor(target4);
 
         target4.setTargetName("D");
-        target4.setExtraInformation("The leaf of the graph");
+        target4.setExtraInformation("Leaf in the graph");
         target4.addToDependsOn(target2);
         target4.addToDependsOn(target3);
 
-        targetsGraph.addNewTargetToTheGraph(target1, target2, target3, target4);
+        target5.setTargetName("E");
+        target5.setExtraInformation("Independent target");
+
+        target6.setTargetName("F");
+        target6.setExtraInformation("Leaf in the graph");
+        target6.addToDependsOn(target2);
+        target2.addToRequiredFor(target6);
+
+        targetsGraph.addNewTargetToTheGraph(target1, target2, target3, target4, target5, target6);
     }
 
 }
