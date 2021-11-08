@@ -1,7 +1,9 @@
 package userInterface;
 
+import com.sun.javafx.tk.Toolkit;
 import target.Graph;
 import target.Target;
+import task.Task;
 
 public interface OutputInterface {
     public void printMenu();
@@ -12,8 +14,4 @@ public interface OutputInterface {
     public void printGraphInformation();
     public void printTargetConnectionStatus();
     public void exitFromSystem();
-    public void printExceptionInformation(String message);
-    public void printTargetsSummary();
-    public void printTaskSummary();
-    public void printTotalExecutionTime();
 }

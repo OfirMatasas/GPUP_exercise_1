@@ -5,6 +5,17 @@ import target.Target;
 import task.SimulationTask;
 import task.Task;
 import task.TaskParameters;
+
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Unmarshaller;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.nio.MappedByteBuffer;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -15,13 +26,16 @@ import java.util.Scanner;
 
 public class UserInteractions implements OutputInterface, InputInterface {
     Scanner scanner = new Scanner(System.in);
-    Graph targetsGraph = new Graph();
-    Task runningTask = new SimulationTask();
+    Graph graph = new Graph();
+    Task TaskExecuting = new SimulationTask();
+    Path path;
+    Boolean firstRun = true;
 
     public void SystemExecute()
     {
         System.out.println("Welcome to our project!");
         int userSelection = 0;
+        Boolean incremental;
         initGraph();
 
         while (userSelection != 6)
@@ -33,7 +47,7 @@ public class UserInteractions implements OutputInterface, InputInterface {
             {
                 case 1:
                 {
-                    loadFileAndSaveGraph();
+                    loadFile();
                     break;
                 }
                 case 2:
@@ -53,7 +67,9 @@ public class UserInteractions implements OutputInterface, InputInterface {
                 }
                 case 5:
                 {
-                    executeTask();
+                    incremental = askForIncremental();
+                    TaskExecuting.executeTask(graph, incremental);
+                    firstRun = false;
                     break;
                 }
                 case 6:
@@ -65,30 +81,21 @@ public class UserInteractions implements OutputInterface, InputInterface {
         }
     }
 
-    private void executeTask()
-    {
-        getTaskParametersFromUser();
-        runningTask.startTheClock();
+    public Boolean askForIncremental() {
+        if(firstRun)
+            return true;
 
-        System.out.println("---------------------------------------");
-        for(Target currentTarget : targetsGraph.getGraphTargets().values())
-        {
-            System.out.println("Task on target " + currentTarget.getTargetName() + " just started.");
+        int userSelection;
+        System.out.println("Would you like to start from scratch? (0 - no, 1 - yes):");
+        userSelection = scanner.nextInt();
 
-            System.out.println("Target's extra information: " + currentTarget.getExtraInformation());
-            executeTaskOnTarget(currentTarget);
-
-            System.out.println("---------------------------------------");
-        }
-        runningTask.stopTheClock();
-        printTaskSummary();
+        return userSelection == 1;
     }
-
 
     private void executeTaskOnTarget(Target target)
     {
-        TaskParameters taskParameters = runningTask.getTargetsParameters().get(target);
-        Duration processingTime = runningTask.getTargetsParameters().get(target).getProcessingTime();
+        TaskParameters taskParameters = TaskExecuting.getTargetsParameters().get(target);
+        Duration processingTime = TaskExecuting.getTargetsParameters().get(target).getProcessingTime();
         Random rand = new Random();
 
         if(taskParameters.getRandom())
@@ -99,58 +106,55 @@ public class UserInteractions implements OutputInterface, InputInterface {
             processingTime = Duration.of(newTime, ChronoUnit.MILLIS);
         }
 
-        System.out.format("The system is going to sleep for %02d:%02d:%02d\n", processingTime.toHours(), processingTime.toMinutes(), processingTime.getSeconds());
-        runningTask.executeTaskOnTarget(target);
-        System.out.format("The system went to sleep for %02d:%02d:%02d\n", processingTime.toHours(), processingTime.toMinutes(), processingTime.getSeconds());
+        TaskExecuting.executeTaskOnTarget(target);
 
-        System.out.println("Task on target " + target.getTargetName() + " ended.");
-        System.out.println("The result: " + target.getResultStatus().toString() + ".");
     }
 
-    private void getTaskParametersFromUser() {
-        Duration processingTime=null;
-        long timeInMS = 0;
-        Boolean isRandom = true;
-        int randomTmp;
-        Double successRate = 0.0, successWithWarnings = 0.0;
-        TaskParameters taskParameters = new TaskParameters();
-
-        System.out.print("Enter the processing time (in m/s) for each task: ");
-        timeInMS = scanner.nextInt();
-        processingTime = Duration.of(timeInMS, ChronoUnit.MILLIS);
-
-        System.out.print("Choose if the processing time is limited by the value you just entered, or permanent (0 - limited, 1 - permanent): ");
-        randomTmp=scanner.nextInt();
-
-        if(randomTmp==0)
-            isRandom=true;
-        else
-            isRandom=false;
-
-        System.out.print("Enter the success rate of the task (value between 0 and 1): ");
-        successRate = scanner.nextDouble();
-
-        System.out.print("If the task ended successfully, what is the chance that it ended with warnings? (value between 0 and 1): ");
-        successWithWarnings = scanner.nextDouble();
-
-        taskParameters.setProcessingTime(processingTime);
-        taskParameters.setRandom(isRandom);
-        taskParameters.setSuccessRate(successRate);
-        taskParameters.setSuccessWithWarnings(successWithWarnings);
-
-        for(Target currentTarget : targetsGraph.getGraphTargets().values())
-            runningTask.getTargetsParameters().put(currentTarget, taskParameters);
-    }
-
-    public void loadFileAndSaveGraph()
+    @Override
+    public void loadFile()
     {
+            System.out.println("Please enter the full path of the file you would like to load:");
+            String filePath = scanner.nextLine();
+            Path path = Paths.get(filePath);
 
+            if(!Files.exists(path))
+            {
+                System.out.println("File not found, would you like to try again?");
+            }
+    }
+
+    @Override
+    public void unmarshellXmlFileToObjects()
+    {
+//        try {
+//            File file = new File();
+//            JAXBContext jaxbContext = JAXBContext.newInstance(Graph.class);
+//
+//            Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+//            Customer customer = (Customer) jaxbUnmarshaller.unmarshal(file);
+//            System.out.println(customer);
+//        }
+//        catch (JAXBException e) {
+//            e.printStackTrace();
+//        }
+    }
+
+    @Override
+    public void checkValidationOfFile()
+    {
+        System.out.println("Please enter the full path of the file you would like to load:");
+        String filePath = scanner.nextLine();
+        Path path = Paths.get(filePath);
+        if(!Files.exists(path))
+        {
+            System.out.println("File not found, would you like to try again?");
+        }
     }
 
     @Override
     public void printTargetInformation()
     {
-        if(targetsGraph.getGraphTargets().size() == 0)
+        if(graph.getGraphTargets().size() == 0)
         {
             System.out.println("There're no targets on the graph!");
             System.out.println("Please load a graph from file.");
@@ -159,9 +163,9 @@ public class UserInteractions implements OutputInterface, InputInterface {
 
         System.out.print("Enter target's name: ");
         String targetName = scanner.next();
-        if(targetsGraph.getGraphTargets().containsKey(targetName))
+        if(graph.getGraphTargets().containsKey(targetName))
         {
-            Target selectedTarget = targetsGraph.getGraphTargets().get(targetName);
+            Target selectedTarget = graph.getGraphTargets().get(targetName);
             System.out.println("Target's name: " + targetName);
             System.out.println("Target's property: " + selectedTarget.getTargetProperty());
 
@@ -169,7 +173,6 @@ public class UserInteractions implements OutputInterface, InputInterface {
             printRequiredForTargets(selectedTarget);
             printTargetExtraInformation(selectedTarget);
         }
-
     }
 
     @Override
@@ -214,7 +217,7 @@ public class UserInteractions implements OutputInterface, InputInterface {
         }
         catch(ArithmeticException ex)
         {
-            printExceptionInformation("You entered non-integer. Please try again.");
+            System.out.println("You entered non-integer. Please try again.");
             return 0;
         }
     }
@@ -246,12 +249,12 @@ public class UserInteractions implements OutputInterface, InputInterface {
             System.out.print("Please enter the name of the destination target: ");
             destTargetName = scanner.nextLine();
 
-            sourceTarget = targetsGraph.getGraphTargets().get(sourceTargetName);
-            destTarget = targetsGraph.getGraphTargets().get(destTargetName);
+            sourceTarget = graph.getGraphTargets().get(sourceTargetName);
+            destTarget = graph.getGraphTargets().get(destTargetName);
 
             if(sourceTarget == null || destTarget == null)
             {
-                if(targetsGraph.getGraphTargets().get(sourceTargetName) == null)
+                if(graph.getGraphTargets().get(sourceTargetName) == null)
                     System.out.println("The source target you've entered doesn't exist in the graph!");
                 else
                     System.out.println("The destination target you've entered doesn't exist in the graph!");
@@ -264,7 +267,7 @@ public class UserInteractions implements OutputInterface, InputInterface {
                 }
             }
 
-        if(!targetsGraph.prechecksForTargetsConnection(sourceTargetName, destTargetName))
+        if(!graph.prechecksForTargetsConnection(sourceTargetName, destTargetName))
         {
             System.out.println("There're no paths between " + sourceTargetName + "and " + destTargetName);
             return;
@@ -276,7 +279,7 @@ public class UserInteractions implements OutputInterface, InputInterface {
         if(connectionChoice != 0)
             connection = Target.Connection.REQUIRED_FOR;
 
-        ArrayList<String> paths = targetsGraph.getPathsFromTargets(sourceTarget, destTarget, connection);
+        ArrayList<String> paths = graph.getPathsFromTargets(sourceTarget, destTarget, connection);
 
         if(paths.size() == 0)
             System.out.println("There're no paths between " + sourceTargetName + "and " + destTargetName + "as required.");
@@ -293,46 +296,21 @@ public class UserInteractions implements OutputInterface, InputInterface {
         System.exit(0);
     }
 
-    @Override
-    public void printExceptionInformation(String message) {
-    }
-
-    @Override
-    public void printTargetsSummary()
-    {
-        Duration time;
-        for(Target curTarget: targetsGraph.getGraphTargets().values())
-        {
-            time = curTarget.getResultTime();
-            System.out.println("Target's name :" + curTarget.getTargetName());
-            System.out.println("Target's result status :" + curTarget.getResultStatus());
-            System.out.format("Target's running time: %02d:%02d:%02d\n", time.toHours(), time.toMinutes(), time.getSeconds());
-        }
-    }
-
-    @Override
-    public void printTaskSummary()
-    {
-        printTotalExecutionTime();
-        printTargetsSummary();
-    }
-
     public void printTotalExecutionTime()
     {
-        Duration totalTimeOfTask = runningTask.getTotalTimeSpentOnTask();
+        Duration totalTimeOfTask = TaskExecuting.getTotalTimeSpentOnTask();
         System.out.format("Total execution time for the task: %02d:%02d:%02d\n", totalTimeOfTask.toHours(), totalTimeOfTask.toMinutes(), totalTimeOfTask.getSeconds());
     }
 
-
     public void printGraphInformation()
     {// remember to add condition of if invalid file
-        Map<String,Target> graphTargets = targetsGraph.getGraphTargets();
+        Map<String,Target> graphTargets = graph.getGraphTargets();
 
         System.out.println("Number of targets : " + graphTargets.size());
-        System.out.println("Number of leaf targets : " + targetsGraph.numberOfTargetsByProperty(Target.TargetProperty.LEAF));
-        System.out.println("Number of root targets : " + targetsGraph.numberOfTargetsByProperty(Target.TargetProperty.ROOT));
-        System.out.println("Number of middle targets : " + targetsGraph.numberOfTargetsByProperty(Target.TargetProperty.MIDDLE));
-        System.out.println("Number of independent targets : " + targetsGraph.numberOfTargetsByProperty(Target.TargetProperty.INDEPENDENT));
+        System.out.println("Number of leaf targets : " + graph.numberOfTargetsByProperty(Target.TargetProperty.LEAF));
+        System.out.println("Number of root targets : " + graph.numberOfTargetsByProperty(Target.TargetProperty.ROOT));
+        System.out.println("Number of middle targets : " + graph.numberOfTargetsByProperty(Target.TargetProperty.MIDDLE));
+        System.out.println("Number of independent targets : " + graph.numberOfTargetsByProperty(Target.TargetProperty.INDEPENDENT));
     }
 
     public void initGraph()
@@ -342,33 +320,33 @@ public class UserInteractions implements OutputInterface, InputInterface {
 
         target1.setTargetName("A");
         target1.setExtraInformation("The root of the graph.");
-        target1.addToRequiredFor(target2);
-        target1.addToRequiredFor(target3);
 
         target2.setTargetName("B");
         target2.setExtraInformation("First son of A");
-        target2.addToDependsOn(target1);
-        target2.addToRequiredFor(target4);
 
         target3.setTargetName("C");
         target3.setExtraInformation("Second son of A");
-        target3.addToDependsOn(target1);
-        target3.addToRequiredFor(target4);
 
         target4.setTargetName("D");
         target4.setExtraInformation("Leaf in the graph");
-        target4.addToDependsOn(target2);
-        target4.addToDependsOn(target3);
 
         target5.setTargetName("E");
         target5.setExtraInformation("Independent target");
 
         target6.setTargetName("F");
         target6.setExtraInformation("Leaf in the graph");
+
         target6.addToDependsOn(target2);
+        target3.addToRequiredFor(target4);
+        target1.addToRequiredFor(target3);
+        target4.addToDependsOn(target2);
+        target4.addToDependsOn(target3);
+        target2.addToDependsOn(target1);
         target2.addToRequiredFor(target6);
+        target2.addToRequiredFor(target4);
+        target3.addToDependsOn(target1);
+        target1.addToRequiredFor(target2);
 
-        targetsGraph.addNewTargetToTheGraph(target1, target2, target3, target4, target5, target6);
+        graph.addNewTargetToTheGraph(target1, target2, target3, target4, target5, target6);
     }
-
 }

@@ -2,6 +2,7 @@ package target;
 
 import java.time.Duration;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 public class Target {
@@ -14,15 +15,10 @@ public class Target {
     private Set<Target> requireForTargets;
     private RuntimeStatus runtimeStatus;
     private ResultStatus resultStatus;
-    private Duration resultTime;
     private TargetProperty targetProperty;
     private String targetName;
     private String extraInformation;
     private Boolean wasVisited;
-
-    public Duration getResultTime() {
-        return resultTime;
-    }
 
     public void setWasVisited(Boolean wasVisited) {
         this.wasVisited = wasVisited;
@@ -30,10 +26,6 @@ public class Target {
 
     public Boolean getWasVisited() {
         return wasVisited;
-    }
-
-    public void setResultTime(Duration resultTime) {
-        this.resultTime = resultTime;
     }
 
     public String getTargetName() {
@@ -57,7 +49,6 @@ public class Target {
         this.requireForTargets = new HashSet<>();
         this.runtimeStatus = RuntimeStatus.Waiting;
         this.resultStatus = ResultStatus.Frozen;
-        this.resultTime = Duration.ZERO;
         this.targetProperty = TargetProperty.INDEPENDENT;
         this.wasVisited=false;
     }
@@ -72,6 +63,19 @@ public class Target {
 
     public Set<Target> getRequireForTargets() {
         return requireForTargets;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Target target = (Target) o;
+        return Objects.equals(targetName, target.targetName);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(targetName);
     }
 
     public void setRequireForTargets(Set<Target> requireForTargets) {

@@ -2,24 +2,19 @@ package task;
 
 import target.Graph;
 import target.Target;
-
 import java.time.Duration;
 import java.time.Instant;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 
 public abstract class Task {
     private Map<Target, TaskParameters> targetsParameters;
     private Instant timeStarted, timeEnded;
     private Duration totalTimeSpentOnTask;
     protected Random rand;
-    protected Boolean firstRun;
 
     public Task() {
         this.targetsParameters = new HashMap<>();
         this.rand = new Random();
-        this.firstRun = true;
     }
 
     public Map<Target, TaskParameters> getTargetParameters()
@@ -67,23 +62,12 @@ public abstract class Task {
     protected Boolean canExecuteOnTarget(Target target)
     {
         //Checking if all his depends-on-targets are succeeded. if not - return false.
-        for(Target currentTarget : target.getDependsOnTargets())
+        for(Target currentTarget : target.getRequireForTargets())
         {
-            //Depends-on-target is frozen / failed - return false.
+            //Required-for-target is frozen / failed - return false.
             if(currentTarget.getResultStatus().equals(Target.ResultStatus.Frozen) || currentTarget.getResultStatus().equals(Target.ResultStatus.Failure))
                 return false;
-            //Depends-on-target is in process / waiting - check again in 3 seconds.
-            else if (currentTarget.getRuntimeStatus().equals(Target.RuntimeStatus.InProcess) || currentTarget.getRuntimeStatus().equals(Target.RuntimeStatus.Waiting))
-            {
-                do {
-                    try {
-                        Thread.sleep(3000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                } while(currentTarget.getRuntimeStatus().equals(Target.RuntimeStatus.InProcess));
-            }
-            //Depends-on-target is done, but not successfully - return false.
+            //Required-for-target is done, but not successfully - return false.
             else if(!currentTarget.getRuntimeStatus().equals(Target.RuntimeStatus.Finished))
                 return false;
         }
@@ -92,4 +76,24 @@ public abstract class Task {
     }
 
     abstract public void executeTaskOnTarget(Target target);
+
+    abstract public void executeTask(Graph graph, Boolean fromScratch);
+    abstract public Set<Target> makeExecutableTargetsSet(Graph graph, Boolean fromScratch);
+
+    public Set<Target> addNewTargetsToExecutableSet(Target lastTargetFinished)
+    {
+        Set<Target> returnedSet = new HashSet<>();
+        for(Target candidateTarget : lastTargetFinished.getDependsOnTargets())
+        {
+            for(Target currentTarget : candidateTarget.getRequireForTargets())
+            {
+                if(!currentTarget.getRuntimeStatus().equals(Target.RuntimeStatus.Finished))
+                    break;
+                else if(currentTarget.getRuntimeStatus().equals(Target.RuntimeStatus.Skipped))
+                    break;
+            }
+            returnedSet.add(candidateTarget);
+        }
+        return returnedSet;
+    }
 }
