@@ -59,21 +59,21 @@ public abstract class Task {
         return true;
     }
 
-    protected Boolean canExecuteOnTarget(Target target)
-    {
-        //Checking if all his depends-on-targets are succeeded. if not - return false.
-        for(Target currentTarget : target.getRequireForTargets())
-        {
-            //Required-for-target is frozen / failed - return false.
-            if(currentTarget.getResultStatus().equals(Target.ResultStatus.Frozen) || currentTarget.getResultStatus().equals(Target.ResultStatus.Failure))
-                return false;
-            //Required-for-target is done, but not successfully - return false.
-            else if(!currentTarget.getRuntimeStatus().equals(Target.RuntimeStatus.Finished))
-                return false;
-        }
-
-        return true;
-    }
+//    protected Boolean canExecuteOnTarget(Target target)
+//    {
+//        //Checking if all his depends-on-targets are succeeded. if not - return false.
+//        for(Target currentTarget : target.getDependsOnTargets())
+//        {
+//            //Depends-on-target is frozen / failed - return false.
+//            if(currentTarget.getResultStatus().equals(Target.ResultStatus.Frozen) || currentTarget.getResultStatus().equals(Target.ResultStatus.Failure))
+//                return false;
+//            //Depends-on-target is done, but not successfully - return false.
+//            else if(!currentTarget.getRuntimeStatus().equals(Target.RuntimeStatus.Finished))
+//                return false;
+//        }
+//
+//        return true;
+//    }
 
     abstract public void executeTaskOnTarget(Target target);
 
@@ -83,16 +83,26 @@ public abstract class Task {
     public Set<Target> addNewTargetsToExecutableSet(Target lastTargetFinished)
     {
         Set<Target> returnedSet = new HashSet<>();
-        for(Target candidateTarget : lastTargetFinished.getDependsOnTargets())
+        Boolean addable = true;
+
+        //Check every required-for-target of the last target tasked
+        for(Target candidateTarget : lastTargetFinished.getRequireForTargets())
         {
-            for(Target currentTarget : candidateTarget.getRequireForTargets())
+            addable = true;
+            //If the current candidate is already skipped - break
+            if(candidateTarget.getRuntimeStatus().equals(Target.RuntimeStatus.Skipped))
+                break;
+            //Check every target the candidate depends on
+            for(Target candidateDependsOn : candidateTarget.getDependsOnTargets())
             {
-                if(!currentTarget.getRuntimeStatus().equals(Target.RuntimeStatus.Finished))
-                    break;
-                else if(currentTarget.getRuntimeStatus().equals(Target.RuntimeStatus.Skipped))
-                    break;
+                //If the candidate's depends-on-target is not succeeded (even with warning) - break
+                if(candidateDependsOn.getResultStatus().equals(Target.ResultStatus.Failure) ||
+                        candidateDependsOn.getResultStatus().equals(Target.ResultStatus.Frozen) )
+                    addable = false;
             }
-            returnedSet.add(candidateTarget);
+            //The candidate is not skipped and all of the targets it depends on are succeeded
+            if(addable)
+                returnedSet.add(candidateTarget);
         }
         return returnedSet;
     }

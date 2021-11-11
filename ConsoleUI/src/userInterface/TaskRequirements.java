@@ -70,6 +70,7 @@ public class TaskRequirements {
 
         System.out.println("Task on target " + target.getTargetName() + " ended.");
         System.out.println("The result: " + target.getResultStatus().toString() + ".");
+        System.out.println("The runtime status: " + target.getRuntimeStatus().toString() + ".");
     }
 
     public void printStartOfTaskOnGraph(Graph graph)

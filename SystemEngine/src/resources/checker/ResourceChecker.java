@@ -67,25 +67,25 @@ public class ResourceChecker{
     {
         String target1Name = target1.getTargetName(), target2Name = target2.getTargetName();
 
-        if(depType.equals(DependencyType.requiredFor.toString()))
+        if(depType.equals(DependencyType.dependsOn.toString()))
         {
-            if(target2.getRequireForTargets().contains(target1))
+            if(target2.getDependsOnTargets().contains(target1))
                 return false;
             else//Valid connection between the targets
             {
-                target1.addToRequiredFor(target2);
-                target2.addToDependsOn(target1);
+                target1.addToDependsOn(target2);
+                target2.addToRequiredFor(target1);
             }
         }
         else // dep.getType().equals(DependencyType.DependsOn)
         {
-            if(target2.getDependsOnTargets().contains(target1)) {
+            if(target2.getRequireForTargets().contains(target1)) {
                 return false;
             }
             else
             {
-                target1.addToDependsOn(target2);
-                target2.addToRequiredFor(target1);
+                target1.addToRequiredFor(target2);
+                target2.addToDependsOn(target1);
             }
         }
         return true;

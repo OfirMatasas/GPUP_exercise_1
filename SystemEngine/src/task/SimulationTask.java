@@ -17,8 +17,8 @@ public class SimulationTask extends Task{
 
     public void executeTaskOnTarget(Target target)
     {
-        if(!canExecuteOnTarget(target))
-            return;
+//        if(!canExecuteOnTarget(target))
+//            return;
 
         getTargetsParameters().get(target).startTheClock();
         target.setWasVisited(true);
@@ -32,14 +32,14 @@ public class SimulationTask extends Task{
                 target.setResultStatus(Target.ResultStatus.Warning);
             else
                 target.setResultStatus(Target.ResultStatus.Success);
-
-            target.setRuntimeStatus(Target.RuntimeStatus.Finished);
         }
         else
         {
             target.setResultStatus(Target.ResultStatus.Failure);
-            target.setAllDependsOnTargetsOnFrozen();
+            target.setAllRequiredForTargetsToChosenStatus(Target.RuntimeStatus.Skipped, Target.ResultStatus.Frozen);
         }
+
+        target.setRuntimeStatus(Target.RuntimeStatus.Finished);
 
         try {
             Thread.sleep(getTargetsParameters().get(target).getProcessingTime().toMillis());
@@ -111,6 +111,9 @@ public class SimulationTask extends Task{
             {
                 if(currentTarget.getResultStatus().equals(Target.ResultStatus.Failure))
                 {
+                    currentTarget.setResultStatus(Target.ResultStatus.Frozen);
+                    currentTarget.setRuntimeStatus(Target.RuntimeStatus.Waiting);
+                    currentTarget.setAllRequiredForTargetsToChosenStatus(Target.RuntimeStatus.Frozen, Target.ResultStatus.Frozen);
                     set.add(currentTarget);
                 }
             }

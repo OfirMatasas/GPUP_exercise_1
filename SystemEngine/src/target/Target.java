@@ -110,13 +110,13 @@ public class Target {
 
     public void addToRequiredFor(Target requiredFor) { requireForTargets.add(requiredFor); }
 
-    public void setAllDependsOnTargetsOnFrozen()
+    public void setAllRequiredForTargetsToChosenStatus(RuntimeStatus newRuntimeStatus, ResultStatus newResultStatus)
     {
-        for(Target currentTarget : dependsOnTargets)
+        for(Target currentTarget : requireForTargets)
         {
-            currentTarget.setRuntimeStatus(RuntimeStatus.Frozen);
-            currentTarget.setResultStatus(ResultStatus.Frozen);
-            currentTarget.setAllDependsOnTargetsOnFrozen();
+            currentTarget.setRuntimeStatus(newRuntimeStatus);
+            currentTarget.setResultStatus(newResultStatus);
+            currentTarget.setAllRequiredForTargetsToChosenStatus(newRuntimeStatus, newResultStatus);
         }
     }
 }

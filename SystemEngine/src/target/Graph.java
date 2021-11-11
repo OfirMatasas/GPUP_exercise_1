@@ -88,17 +88,17 @@ public class Graph {
 
         for(Target currentTarget : graphTargets.values())
         {
-            if(currentTarget.getRequireForTargets().size() == 0 && currentTarget.getDependsOnTargets().size() == 0)
+            if(currentTarget.getDependsOnTargets().size() == 0 && currentTarget.getRequireForTargets().size() == 0)
             {//Independent
                 currentTargetProperty = Target.TargetProperty.INDEPENDENT;
             }
-            else if(currentTarget.getRequireForTargets().size() == 0)
+            else if(currentTarget.getDependsOnTargets().size() == 0)
             {//Leaf
                 currentTargetProperty = Target.TargetProperty.LEAF;
             }
-            else if(currentTarget.getDependsOnTargets().size() == 0)
+            else if(currentTarget.getRequireForTargets().size() == 0)
             {//Root
-                currentTargetProperty = Target.TargetProperty.ROOT;
+                currentTargetProperty = Target.TargetProperty.ROOT  ;
             }
             else
             {//Middle

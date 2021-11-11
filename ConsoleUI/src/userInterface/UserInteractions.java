@@ -113,14 +113,34 @@ public class UserInteractions implements OutputInterface, InputInterface {
     @Override
     public void loadFile()
     {
+        Character toCOntinue = 'Y';
+
+        while(toCOntinue.equals('Y'))
+        {
             System.out.println("Please enter the full path of the file you would like to load:");
+            scanner.next();
             String filePath = scanner.nextLine();
             Path path = Paths.get(filePath);
+           // Files file = new Files(path);
+            System.out.println("File Name: " + path.getFileName());
 
-            if(!Files.exists(path))
+            if(!Files.isExecutable(path))
             {
-                System.out.println("File not found, would you like to try again?");
+                while(!toCOntinue.equals('Y') || !toCOntinue.equals('N'))
+                {
+                    System.out.println("File not found, would you like to try again? (n/y)");
+                    toCOntinue=scanner.next().charAt(0);
+
+                    if(toCOntinue.toString().toUpperCase().equals('Y'))
+                        continue;
+                    else if(toCOntinue.toString().toUpperCase().equals('N'))
+                        break;
+                    else
+                        System.out.println("Invalid selection. try again.");
+                }
             }
+        }
+
     }
 
     @Override
@@ -169,8 +189,8 @@ public class UserInteractions implements OutputInterface, InputInterface {
             System.out.println("Target's name: " + targetName);
             System.out.println("Target's property: " + selectedTarget.getTargetProperty());
 
-            printDependsOnTargets(selectedTarget);
             printRequiredForTargets(selectedTarget);
+            printDependsOnTargets(selectedTarget);
             printTargetExtraInformation(selectedTarget);
         }
     }
@@ -239,16 +259,16 @@ public class UserInteractions implements OutputInterface, InputInterface {
         String sourceTargetName = null, destTargetName = null;
         Target sourceTarget = null, destTarget = null;
         Target.Connection connection = Target.Connection.DEPENDS_ON;
-        Boolean toContinue = true;
+
+        int toContinueTmp=1;
         int connectionChoice = 0;
 
-        while(toContinue)
+        while(toContinueTmp!=0)
         {
             System.out.print("Please enter the name of the source target: ");
-            sourceTargetName = scanner.nextLine();
+            sourceTargetName = scanner.next();
             System.out.print("Please enter the name of the destination target: ");
-            destTargetName = scanner.nextLine();
-
+            destTargetName = scanner.next();
             sourceTarget = graph.getGraphTargets().get(sourceTargetName);
             destTarget = graph.getGraphTargets().get(destTargetName);
 
@@ -259,17 +279,19 @@ public class UserInteractions implements OutputInterface, InputInterface {
                 else
                     System.out.println("The destination target you've entered doesn't exist in the graph!");
 
-                System.out.println("Would you like to try again? (0 - no, 1 - yes");
-                    toContinue = scanner.nextBoolean();
+                System.out.println("Would you like to try again? (0 - no, 1 - yes)");
+                    toContinueTmp = scanner.nextInt();
 
-                    if(!toContinue)
+                    if(toContinueTmp==0)
                         return;
-                }
             }
+            else
+                break;
+        }
 
         if(!graph.prechecksForTargetsConnection(sourceTargetName, destTargetName))
         {
-            System.out.println("There're no paths between " + sourceTargetName + "and " + destTargetName);
+            System.out.println("There're no paths between " + sourceTargetName + " and " + destTargetName);
             return;
         }
 
@@ -282,10 +304,10 @@ public class UserInteractions implements OutputInterface, InputInterface {
         ArrayList<String> paths = graph.getPathsFromTargets(sourceTarget, destTarget, connection);
 
         if(paths.size() == 0)
-            System.out.println("There're no paths between " + sourceTargetName + "and " + destTargetName + "as required.");
+            System.out.println("There're no paths between " + sourceTargetName + " and " + destTargetName + " as required.");
         else
         {
-            System.out.println("There're " + paths.size() + " paths between " +  sourceTargetName + "and " + destTargetName + ":");
+            System.out.println("There're " + paths.size() + " paths between " +  sourceTargetName + " and " + destTargetName + ":");
             for(String currentPath : paths)
                 System.out.println(currentPath);
         }
@@ -336,16 +358,19 @@ public class UserInteractions implements OutputInterface, InputInterface {
         target6.setTargetName("F");
         target6.setExtraInformation("Leaf in the graph");
 
-        target6.addToDependsOn(target2);
-        target3.addToRequiredFor(target4);
-        target1.addToRequiredFor(target3);
-        target4.addToDependsOn(target2);
-        target4.addToDependsOn(target3);
-        target2.addToDependsOn(target1);
-        target2.addToRequiredFor(target6);
-        target2.addToRequiredFor(target4);
-        target3.addToDependsOn(target1);
-        target1.addToRequiredFor(target2);
+        target6.addToRequiredFor(target2);
+        target3.addToDependsOn(target4);
+        target1.addToDependsOn(target3);
+        target4.addToRequiredFor(target2);
+        target4.addToRequiredFor(target3);
+        target2.addToRequiredFor(target1);
+        target2.addToDependsOn(target6);
+        target2.addToDependsOn(target4);
+        target3.addToRequiredFor(target1);
+        target1.addToDependsOn(target2);
+
+//        target6.addToDependsOn(target4);
+//        target4.addToRequiredFor(target6);
 
         graph.addNewTargetToTheGraph(target1, target2, target3, target4, target5, target6);
     }
