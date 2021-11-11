@@ -2,7 +2,11 @@ package task;
 
 import target.Graph;
 import target.Target;
+import userInterface.GraphSummary;
+import userInterface.TargetSummary;
 import userInterface.TaskRequirements;
+
+import java.time.Duration;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -50,7 +54,7 @@ public class SimulationTask extends Task{
         getTargetsParameters().get(target).stopTheClock();
     }
 
-    public void executeTask(Graph graph, Boolean fromScratch)
+    public void executeTask(Graph graph, Boolean fromScratch, GraphSummary graphSummary)
     {
         TaskParameters taskParameters = requirements.getTaskParametersFromUser();
 
@@ -60,7 +64,7 @@ public class SimulationTask extends Task{
         Set<Target> executableTargets = makeExecutableTargetsSet(graph, fromScratch);
         //Starting task on graph
         requirements.printStartOfTaskOnGraph(graph);
-        startTheClock();
+        graphSummary.startTheClock();
 
         Set<Target> cloneSet = new HashSet<>(), returnedSet;
 
@@ -74,7 +78,9 @@ public class SimulationTask extends Task{
             for(Target currentTarget : cloneSet)
             {
                 requirements.printStartOfTaskOnTarget(this, currentTarget);
+
                 executeTaskOnTarget(currentTarget);
+                updateGraphSummary(graphSummary, currentTarget, taskParameters);
                 returnedSet = addNewTargetsToExecutableSet(currentTarget);
 
                 for(Target newExecutable : returnedSet)
@@ -87,8 +93,19 @@ public class SimulationTask extends Task{
         }
 
         //Task stopped
-        stopTheClock();
-        requirements.printGraphTaskSummary(this, graph);
+        graphSummary.stopTheClock();
+        graphSummary.calculateResults();
+        requirements.printGraphTaskSummary(graphSummary);
+    }
+
+    public void updateGraphSummary(GraphSummary graphSummary, Target target, TaskParameters targetTaskParameters) {
+        Duration time = targetTaskParameters.getProcessingTime();
+        String targetName = target.getTargetName();
+        String extraInformation = target.getExtraInformation();
+        Target.ResultStatus resultStatus = target.getResultStatus();
+
+        graphSummary.getTargetsSummaryMap().put(targetName,
+                new TargetSummary(time, targetName, extraInformation, resultStatus));
     }
 
     @Override

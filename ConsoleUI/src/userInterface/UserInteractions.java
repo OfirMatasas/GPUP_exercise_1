@@ -1,26 +1,15 @@
 package userInterface;
 
-import com.sun.org.apache.xpath.internal.operations.Bool;
 import target.Graph;
 import target.Target;
 import task.SimulationTask;
 import task.Task;
 import task.TaskParameters;
 
-import javax.management.Descriptor;
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Unmarshaller;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.MappedByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
-import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
@@ -28,8 +17,8 @@ public class UserInteractions implements OutputInterface, InputInterface {
     Scanner scanner = new Scanner(System.in);
     Graph graph = new Graph();
     Task TaskExecuting = new SimulationTask();
-    Path path;
     Boolean firstRun = true;
+    GraphSummary graphSummary;
 
     public void SystemExecute()
     {
@@ -68,7 +57,7 @@ public class UserInteractions implements OutputInterface, InputInterface {
                 case 5:
                 {
                     incremental = askForIncremental();
-                    TaskExecuting.executeTask(graph, incremental);
+                    TaskExecuting.executeTask(graph, incremental, graphSummary);
                     firstRun = false;
                     break;
                 }
@@ -83,13 +72,18 @@ public class UserInteractions implements OutputInterface, InputInterface {
 
     public Boolean askForIncremental() {
         if(firstRun)
+        {
+            graphSummary = new GraphSummary(graph);
             return true;
+        }
 
-        int userSelection;
-        System.out.println("Would you like to start from scratch? (0 - no, 1 - yes):");
-        userSelection = scanner.nextInt();
+        System.out.println("Would you like to start from scratch? (y/n)");
+        Boolean fromScratch = yesOrNo();
 
-        return userSelection == 1;
+        if(fromScratch)
+            graphSummary = new GraphSummary(graph);
+
+        return fromScratch;
     }
 
     private void executeTaskOnTarget(Target target)
@@ -110,6 +104,35 @@ public class UserInteractions implements OutputInterface, InputInterface {
 
     }
 
+    public void printGraphTaskSummary(GraphSummary graphSummary)
+    {
+        Duration time = graphSummary.getTime();
+        System.out.println("------------------------------------------");
+        System.out.println("Task on graph ended!!!");
+        System.out.format("Total time spent on task: %02d:%02d:%02d\n",
+                time.toHours(), time.toMinutes(), time.getSeconds());
+
+        Map<Target.ResultStatus, Integer> results = graphSummary.getAllResultStatus();
+        System.out.println("Number of targets succeeded: " + results.get(Target.ResultStatus.Success));
+        System.out.println("Number of targets succeeded with warnings: " + results.get(Target.ResultStatus.Warning));
+        System.out.println("Number of targets failed: " + results.get(Target.ResultStatus.Failure));
+        System.out.println("Number of targets frozen: " + results.get(Target.ResultStatus.Frozen));
+
+        for(TargetSummary currentTarget : graphSummary.getTargetsSummaryMap().values())
+            printTargetTaskSummary(currentTarget);
+        System.out.println("----------------------------------");
+    }
+
+    public void printTargetTaskSummary(TargetSummary targetSummary)
+    {
+        Duration time = targetSummary.getTime();
+
+        System.out.println("-----------------------");
+        System.out.println("Target's name :" + targetSummary.getTargetName());
+        System.out.println("Target's result status :" + targetSummary.getResultStatus());
+        System.out.format("Target's running time: %02d:%02d:%02d\n", time.toHours(), time.toMinutes(), time.getSeconds());
+    }
+
     @Override
     public void loadFile()
     {
@@ -126,6 +149,7 @@ public class UserInteractions implements OutputInterface, InputInterface {
                 Path path = Paths.get(filePath);
                 graph = TaskExecuting.extractFromXMLToGraph(path);
                 System.out.println("Graph loaded successfully from " + path.getFileName().toString() + " !");
+                firstRun = true;
                 return;
             }
             catch(Exception ex)
@@ -177,24 +201,33 @@ public class UserInteractions implements OutputInterface, InputInterface {
     @Override
     public void printTargetInformation()
     {
-        if(graph.getGraphTargets().size() == 0)
+        Boolean tryAgain = true;
+        while(tryAgain)
         {
-            System.out.println("There're no targets on the graph!");
-            System.out.println("Please load a graph from file.");
-            return;
-        }
+            if(graph.getGraphTargets().size() == 0)
+            {
+                System.out.println("There're no targets on the graph!");
+                System.out.println("Please load a graph from file.");
+                return;
+            }
 
-        System.out.print("Enter target's name: ");
-        String targetName = scanner.next();
-        if(graph.getGraphTargets().containsKey(targetName))
-        {
-            Target selectedTarget = graph.getGraphTargets().get(targetName);
-            System.out.println("Target's name: " + targetName);
-            System.out.println("Target's property: " + selectedTarget.getTargetProperty());
+            System.out.print("Enter target's name: ");
+            String targetName = scanner.next();
+            if(graph.getGraphTargets().containsKey(targetName))
+            {
+                Target selectedTarget = graph.getGraphTargets().get(targetName);
+                System.out.println("Target's name: " + targetName);
+                System.out.println("Target's property: " + selectedTarget.getTargetProperty());
 
-            printRequiredForTargets(selectedTarget);
-            printDependsOnTargets(selectedTarget);
-            printTargetExtraInformation(selectedTarget);
+                printRequiredForTargets(selectedTarget);
+                printDependsOnTargets(selectedTarget);
+                printTargetExtraInformation(selectedTarget);
+                break;
+            }
+
+            System.out.println("There's no target named " + targetName + " in graph.");
+            System.out.println("Would you like to try again? (y/n)");
+            tryAgain = yesOrNo();
         }
     }
 

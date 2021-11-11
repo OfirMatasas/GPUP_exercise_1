@@ -78,33 +78,32 @@ public class TaskRequirements {
         System.out.println("Task started on graph!");
     }
 
-    public void printGraphTaskSummary(Task task, Graph graph)
+    public void printGraphTaskSummary(GraphSummary graphSummary)
     {
-        Duration time = task.getTotalTimeSpentOnTask();
+        Duration time = graphSummary.getTime();
         System.out.println("------------------------------------------");
         System.out.println("Task on graph ended!!!");
         System.out.format("Total time spent on task: %02d:%02d:%02d\n",
                 time.toHours(), time.toMinutes(), time.getSeconds());
 
-        Map<Target.ResultStatus, Integer> results = graph.calculateResultResults();
+        Map<Target.ResultStatus, Integer> results = graphSummary.getAllResultStatus();
         System.out.println("Number of targets succeeded: " + results.get(Target.ResultStatus.Success));
         System.out.println("Number of targets succeeded with warnings: " + results.get(Target.ResultStatus.Warning));
         System.out.println("Number of targets failed: " + results.get(Target.ResultStatus.Failure));
         System.out.println("Number of targets frozen: " + results.get(Target.ResultStatus.Frozen));
 
-        for(Target currentTarget : graph.getGraphTargets().values())
-            printTargetTaskSummary(task, currentTarget);
+        for(TargetSummary currentTarget : graphSummary.getTargetsSummaryMap().values())
+            printTargetTaskSummary(currentTarget);
         System.out.println("----------------------------------");
     }
 
-    public void printTargetTaskSummary(Task task, Target target)
+    public void printTargetTaskSummary(TargetSummary targetSummary)
     {
-        Duration time;
-        time = task.getTargetsParameters().get(target).getProcessingTime();
+        Duration time = targetSummary.getTime();
 
         System.out.println("-----------------------");
-        System.out.println("Target's name :" + target.getTargetName());
-        System.out.println("Target's result status :" + target.getResultStatus());
+        System.out.println("Target's name :" + targetSummary.getTargetName());
+        System.out.println("Target's result status :" + targetSummary.getResultStatus());
         System.out.format("Target's running time: %02d:%02d:%02d\n", time.toHours(), time.toMinutes(), time.getSeconds());
     }
 }

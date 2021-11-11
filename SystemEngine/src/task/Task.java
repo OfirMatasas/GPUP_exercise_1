@@ -8,6 +8,8 @@ import resources.checker.ResourceChecker;
 import resources.generated.GPUPDescriptor;
 import target.Graph;
 import target.Target;
+import userInterface.GraphSummary;
+
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
@@ -73,7 +75,7 @@ public abstract class Task {
 
     abstract public void executeTaskOnTarget(Target target);
 
-    abstract public void executeTask(Graph graph, Boolean fromScratch);
+    abstract public void executeTask(Graph graph, Boolean fromScratch, GraphSummary graphSummary);
     abstract public Set<Target> makeExecutableTargetsSet(Graph graph, Boolean fromScratch);
 
     public Set<Target> addNewTargetsToExecutableSet(Target lastTargetFinished)

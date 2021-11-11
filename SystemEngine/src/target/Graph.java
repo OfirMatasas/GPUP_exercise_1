@@ -136,43 +136,43 @@ public class Graph {
             currentTarget.setWasVisited(false);
     }
 
-    public Map<Target.ResultStatus, Integer> calculateResultResults()
-    {
-        Map<Target.ResultStatus, Integer> mapped = new HashMap<>();
-        Integer succeeded=0, frozen=0, failed=0, warning=0;
-
-        for(Target currentTarget : graphTargets.values())
-        {
-            switch (currentTarget.getResultStatus())
-            {
-                case Frozen:
-                {
-                    frozen++;
-                    break;
-                }
-                case Failure:
-                {
-                    failed++;
-                    break;
-                }
-                case Success:
-                {
-                    succeeded++;
-                    break;
-                }
-                case Warning:
-                {
-                    warning++;
-                    break;
-                }
-            }
-        }
-
-        mapped.put(Target.ResultStatus.Success, succeeded);
-        mapped.put(Target.ResultStatus.Failure, failed);
-        mapped.put(Target.ResultStatus.Warning, warning);
-        mapped.put(Target.ResultStatus.Frozen, frozen);
-
-        return mapped;
-    }
+//    public Map<Target.ResultStatus, Integer> calculateResults()
+//    {
+//        Map<Target.ResultStatus, Integer> mapped = new HashMap<>();
+//        Integer succeeded=0, frozen=0, failed=0, warning=0;
+//
+//        for(Target currentTarget : graphTargets.values())
+//        {
+//            switch (currentTarget.getResultStatus())
+//            {
+//                case Frozen:
+//                {
+//                    frozen++;
+//                    break;
+//                }
+//                case Failure:
+//                {
+//                    failed++;
+//                    break;
+//                }
+//                case Success:
+//                {
+//                    succeeded++;
+//                    break;
+//                }
+//                case Warning:
+//                {
+//                    warning++;
+//                    break;
+//                }
+//            }
+//        }
+//
+//        mapped.put(Target.ResultStatus.Success, succeeded);
+//        mapped.put(Target.ResultStatus.Failure, failed);
+//        mapped.put(Target.ResultStatus.Warning, warning);
+//        mapped.put(Target.ResultStatus.Frozen, frozen);
+//
+//        return mapped;
+//    }
 }
