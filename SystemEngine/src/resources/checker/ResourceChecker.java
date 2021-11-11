@@ -1,7 +1,7 @@
 package resources.checker;
 
-import myExeptions.DoubledTarget;
-import myExeptions.InvalidConnectionBetweenTargets;
+import myExceptions.DoubledTarget;
+import myExceptions.InvalidConnectionBetweenTargets;
 import resources.generated.GPUPDescriptor;
 import resources.generated.GPUPTarget;
 import resources.generated.GPUPTargetDependencies;
@@ -23,6 +23,9 @@ public class ResourceChecker{
         {
             currentTargetName = currentgpupTarget.getName();
             currentTarget = graph.getGraphTargets().get(currentTargetName);
+
+            if(currentgpupTarget.getGPUPTargetDependencies() == null)
+                continue;
 
             for(GPUPTargetDependencies.GPUGDependency dep :
             currentgpupTarget.getGPUPTargetDependencies().getGPUGDependency())

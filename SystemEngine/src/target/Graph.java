@@ -80,7 +80,7 @@ public class Graph {
         return currentPath;
     }
 
-    private void calculateProperties()
+    public void calculateProperties()
     {
         clearTargetsByProperties();
         Integer valCount = 0;

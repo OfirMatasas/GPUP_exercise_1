@@ -1,17 +1,20 @@
 package userInterface;
 
+import com.sun.org.apache.xpath.internal.operations.Bool;
 import target.Graph;
 import target.Target;
 import task.SimulationTask;
 import task.Task;
 import task.TaskParameters;
 
+import javax.management.Descriptor;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -19,10 +22,7 @@ import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.Random;
-import java.util.Scanner;
+import java.util.*;
 
 public class UserInteractions implements OutputInterface, InputInterface {
     Scanner scanner = new Scanner(System.in);
@@ -113,53 +113,56 @@ public class UserInteractions implements OutputInterface, InputInterface {
     @Override
     public void loadFile()
     {
-        Character toCOntinue = 'Y';
+        Boolean tryAgain = true;
 
-        while(toCOntinue.equals('Y'))
+        while(tryAgain)
         {
-            System.out.println("Please enter the full path of the file you would like to load:");
-            scanner.next();
-            String filePath = scanner.nextLine();
-            Path path = Paths.get(filePath);
-           // Files file = new Files(path);
-            System.out.println("File Name: " + path.getFileName());
+            try {
+                System.out.println("Please enter the full path of the file you would like to load:");
+                scanner.nextLine();
+                String filePath = scanner.nextLine();
+                filePath=filePath.trim();
 
-            if(!Files.isExecutable(path))
+                Path path = Paths.get(filePath);
+                graph = TaskExecuting.extractFromXMLToGraph(path);
+                System.out.println("Graph loaded successfully from " + path.getFileName().toString() + " !");
+                return;
+            }
+            catch(Exception ex)
             {
-                while(!toCOntinue.equals('Y') || !toCOntinue.equals('N'))
-                {
-                    System.out.println("File not found, would you like to try again? (n/y)");
-                    toCOntinue=scanner.next().charAt(0);
-
-                    if(toCOntinue.toString().toUpperCase().equals('Y'))
-                        continue;
-                    else if(toCOntinue.toString().toUpperCase().equals('N'))
-                        break;
-                    else
-                        System.out.println("Invalid selection. try again.");
-                }
+                System.out.println(ex.getMessage());
+                System.out.println("Would you like to try again? (y/n)");
+                tryAgain = yesOrNo();
             }
         }
-
     }
 
-    @Override
-    public void unmarshellXmlFileToObjects()
+    public Boolean yesOrNo()
     {
-//        try {
-//            File file = new File();
-//            JAXBContext jaxbContext = JAXBContext.newInstance(Graph.class);
-//
-//            Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-//            Customer customer = (Customer) jaxbUnmarshaller.unmarshal(file);
-//            System.out.println(customer);
-//        }
-//        catch (JAXBException e) {
-//            e.printStackTrace();
-//        }
+        Character userSelection = 'j';
+        while (!userSelection.equals('y') && (!userSelection.equals('Y')) && (!userSelection.equals('n')) && (!userSelection.equals('N')))
+        {
+            try {
+                userSelection = scanner.next().charAt(0);
+
+                if (userSelection.toString().toUpperCase().equals("Y"))
+                    return true;
+                else if (userSelection.toString().toUpperCase().equals("N"))
+                    return false;
+                else
+                {
+                    System.out.println("Invalid selection. try again.");
+                    scanner.nextLine();
+                }
+            } catch (InputMismatchException e) {
+                System.out.println("Please enter y/n");
+            }
+        }
+        return userSelection.equals('y') || userSelection.equals('Y');
     }
 
-    @Override
+
+
     public void checkValidationOfFile()
     {
         System.out.println("Please enter the full path of the file you would like to load:");

@@ -1,7 +1,19 @@
 package task;
 
+import myExceptions.DoubledTarget;
+import myExceptions.FileNotFound;
+import myExceptions.InvalidConnectionBetweenTargets;
+import myExceptions.NotXMLFile;
+import resources.checker.ResourceChecker;
+import resources.generated.GPUPDescriptor;
 import target.Graph;
 import target.Target;
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Unmarshaller;
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
@@ -59,22 +71,6 @@ public abstract class Task {
         return true;
     }
 
-//    protected Boolean canExecuteOnTarget(Target target)
-//    {
-//        //Checking if all his depends-on-targets are succeeded. if not - return false.
-//        for(Target currentTarget : target.getDependsOnTargets())
-//        {
-//            //Depends-on-target is frozen / failed - return false.
-//            if(currentTarget.getResultStatus().equals(Target.ResultStatus.Frozen) || currentTarget.getResultStatus().equals(Target.ResultStatus.Failure))
-//                return false;
-//            //Depends-on-target is done, but not successfully - return false.
-//            else if(!currentTarget.getRuntimeStatus().equals(Target.RuntimeStatus.Finished))
-//                return false;
-//        }
-//
-//        return true;
-//    }
-
     abstract public void executeTaskOnTarget(Target target);
 
     abstract public void executeTask(Graph graph, Boolean fromScratch);
@@ -105,5 +101,43 @@ public abstract class Task {
                 returnedSet.add(candidateTarget);
         }
         return returnedSet;
+    }
+
+    public GPUPDescriptor fromXmlFileToObject(Path fileName)
+    {
+        GPUPDescriptor descriptor = null;
+        try
+        {
+            File file = new File(fileName.toString());
+            JAXBContext jaxbContext = JAXBContext.newInstance(GPUPDescriptor.class);
+
+            Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+            descriptor = (GPUPDescriptor)jaxbUnmarshaller.unmarshal(file);
+        }
+        catch (JAXBException e)
+        {
+            e.printStackTrace();
+        }
+
+        return descriptor;
+    }
+
+    public Graph extractFromXMLToGraph(Path path) throws NotXMLFile, FileNotFound, DoubledTarget, InvalidConnectionBetweenTargets {
+        if(!path.getFileName().toString().endsWith(".xml"))
+        {
+            throw new NotXMLFile(path.getFileName().toString());
+        }
+        else if(!Files.isExecutable(path))
+        {
+            throw new FileNotFound(path.getFileName().toString());
+        }
+        //The file can be executed
+        GPUPDescriptor descriptor = fromXmlFileToObject(path);
+        ResourceChecker checker = new ResourceChecker();
+
+        Graph graph = checker.checkResource(descriptor);
+        graph.calculateProperties();
+
+        return graph;
     }
 }
