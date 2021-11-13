@@ -3,8 +3,17 @@ package target;
 import java.util.*;
 
 public class Graph {
+    private String graphName;
     private Map<String, Target> graphTargets;
     private Map<Target.TargetProperty, Set<Target>> targetsByProperties;
+
+    public String getGraphName() {
+        return graphName;
+    }
+
+    public void setGraphName(String graphName) {
+        this.graphName = graphName;
+    }
 
     public Graph() {
         this.graphTargets = new HashMap<>();
@@ -124,7 +133,7 @@ public class Graph {
             currentTarget.setResultStatus(Target.ResultStatus.Frozen);
     }
 
-    public void setAllTargetruntimeStatusToDefault()
+    public void setAllTargetRuntimeStatusToDefault()
     {
         for(Target currentTarget : graphTargets.values())
             currentTarget.setRuntimeStatus(Target.RuntimeStatus.Waiting);

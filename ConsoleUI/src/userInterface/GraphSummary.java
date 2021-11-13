@@ -9,10 +9,19 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class GraphSummary {
+    private String graphName;
     private Duration totalTime;
     private Instant timeStarted, timeEnded;
     private Map<String, TargetSummary> targetsSummaryMap;
     private Map<Target.ResultStatus, Integer> allResultStatus;
+
+    public String getGraphName() {
+        return graphName;
+    }
+
+    public void setGraphName(String graphName) {
+        this.graphName = graphName;
+    }
 
     public Map<Target.ResultStatus, Integer> getAllResultStatus() {
         return allResultStatus;

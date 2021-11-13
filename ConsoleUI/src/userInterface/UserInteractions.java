@@ -1,5 +1,7 @@
 package userInterface;
 
+import myExceptions.FileNotFound;
+import myExceptions.OpeningFileCrash;
 import target.Graph;
 import target.Target;
 import task.SimulationTask;
@@ -25,7 +27,7 @@ public class UserInteractions implements OutputInterface, InputInterface {
         System.out.println("Welcome to our project!");
         int userSelection = 0;
         Boolean incremental;
-        initGraph();
+//        initGraph();
 
         while (userSelection != 6)
         {
@@ -57,7 +59,11 @@ public class UserInteractions implements OutputInterface, InputInterface {
                 case 5:
                 {
                     incremental = askForIncremental();
-                    TaskExecuting.executeTask(graph, incremental, graphSummary);
+                    try {
+                        TaskExecuting.executeTask(graph, incremental, graphSummary);
+                    } catch (OpeningFileCrash | FileNotFound e) {
+                        System.out.println(e.getMessage());
+                    }
                     firstRun = false;
                     break;
                 }
@@ -81,46 +87,12 @@ public class UserInteractions implements OutputInterface, InputInterface {
         Boolean fromScratch = yesOrNo();
 
         if(fromScratch)
-            graphSummary = new GraphSummary(graph);
-
-        return fromScratch;
-    }
-
-    private void executeTaskOnTarget(Target target)
-    {
-        TaskParameters taskParameters = TaskExecuting.getTargetsParameters().get(target);
-        Duration processingTime = TaskExecuting.getTargetsParameters().get(target).getProcessingTime();
-        Random rand = new Random();
-
-        if(taskParameters.getRandom())
         {
-            long originalTime = taskParameters.getProcessingTime().toMillis();
-            long newTime = (long)(Math.random() * (taskParameters.getProcessingTime().toMillis())) + 1;
-
-            processingTime = Duration.of(newTime, ChronoUnit.MILLIS);
+            graphSummary = new GraphSummary(graph);
+            TaskExecuting.clearTaskHistory(graph);
         }
 
-        TaskExecuting.executeTaskOnTarget(target);
-
-    }
-
-    public void printGraphTaskSummary(GraphSummary graphSummary)
-    {
-        Duration time = graphSummary.getTime();
-        System.out.println("------------------------------------------");
-        System.out.println("Task on graph ended!!!");
-        System.out.format("Total time spent on task: %02d:%02d:%02d\n",
-                time.toHours(), time.toMinutes(), time.getSeconds());
-
-        Map<Target.ResultStatus, Integer> results = graphSummary.getAllResultStatus();
-        System.out.println("Number of targets succeeded: " + results.get(Target.ResultStatus.Success));
-        System.out.println("Number of targets succeeded with warnings: " + results.get(Target.ResultStatus.Warning));
-        System.out.println("Number of targets failed: " + results.get(Target.ResultStatus.Failure));
-        System.out.println("Number of targets frozen: " + results.get(Target.ResultStatus.Frozen));
-
-        for(TargetSummary currentTarget : graphSummary.getTargetsSummaryMap().values())
-            printTargetTaskSummary(currentTarget);
-        System.out.println("----------------------------------");
+        return fromScratch;
     }
 
     public void printTargetTaskSummary(TargetSummary targetSummary)
@@ -144,7 +116,7 @@ public class UserInteractions implements OutputInterface, InputInterface {
                 System.out.println("Please enter the full path of the file you would like to load:");
                 scanner.nextLine();
                 String filePath = scanner.nextLine();
-                filePath=filePath.trim();
+                filePath = filePath.trim();
 
                 Path path = Paths.get(filePath);
                 graph = TaskExecuting.extractFromXMLToGraph(path);
@@ -183,19 +155,6 @@ public class UserInteractions implements OutputInterface, InputInterface {
             }
         }
         return userSelection.equals('y') || userSelection.equals('Y');
-    }
-
-
-
-    public void checkValidationOfFile()
-    {
-        System.out.println("Please enter the full path of the file you would like to load:");
-        String filePath = scanner.nextLine();
-        Path path = Paths.get(filePath);
-        if(!Files.exists(path))
-        {
-            System.out.println("File not found, would you like to try again?");
-        }
     }
 
     @Override
@@ -371,43 +330,43 @@ public class UserInteractions implements OutputInterface, InputInterface {
         System.out.println("Number of independent targets : " + graph.numberOfTargetsByProperty(Target.TargetProperty.INDEPENDENT));
     }
 
-    public void initGraph()
-    {
-        Target target1 = new Target(), target2 = new Target(), target3 = new Target(), target4 = new Target();
-        Target target5 = new Target(), target6 = new Target();
-
-        target1.setTargetName("A");
-        target1.setExtraInformation("The root of the graph.");
-
-        target2.setTargetName("B");
-        target2.setExtraInformation("First son of A");
-
-        target3.setTargetName("C");
-        target3.setExtraInformation("Second son of A");
-
-        target4.setTargetName("D");
-        target4.setExtraInformation("Leaf in the graph");
-
-        target5.setTargetName("E");
-        target5.setExtraInformation("Independent target");
-
-        target6.setTargetName("F");
-        target6.setExtraInformation("Leaf in the graph");
-
-        target6.addToRequiredFor(target2);
-        target3.addToDependsOn(target4);
-        target1.addToDependsOn(target3);
-        target4.addToRequiredFor(target2);
-        target4.addToRequiredFor(target3);
-        target2.addToRequiredFor(target1);
-        target2.addToDependsOn(target6);
-        target2.addToDependsOn(target4);
-        target3.addToRequiredFor(target1);
-        target1.addToDependsOn(target2);
-
-//        target6.addToDependsOn(target4);
-//        target4.addToRequiredFor(target6);
-
-        graph.addNewTargetToTheGraph(target1, target2, target3, target4, target5, target6);
-    }
+//    public void initGraph()
+//    {
+//        Target target1 = new Target(), target2 = new Target(), target3 = new Target(), target4 = new Target();
+//        Target target5 = new Target(), target6 = new Target();
+//
+//        target1.setTargetName("A");
+//        target1.setExtraInformation("The root of the graph.");
+//
+//        target2.setTargetName("B");
+//        target2.setExtraInformation("First son of A");
+//
+//        target3.setTargetName("C");
+//        target3.setExtraInformation("Second son of A");
+//
+//        target4.setTargetName("D");
+//        target4.setExtraInformation("Leaf in the graph");
+//
+//        target5.setTargetName("E");
+//        target5.setExtraInformation("Independent target");
+//
+//        target6.setTargetName("F");
+//        target6.setExtraInformation("Leaf in the graph");
+//
+//        target6.addToRequiredFor(target2);
+//        target3.addToDependsOn(target4);
+//        target1.addToDependsOn(target3);
+//        target4.addToRequiredFor(target2);
+//        target4.addToRequiredFor(target3);
+//        target2.addToRequiredFor(target1);
+//        target2.addToDependsOn(target6);
+//        target2.addToDependsOn(target4);
+//        target3.addToRequiredFor(target1);
+//        target1.addToDependsOn(target2);
+//
+////        target6.addToDependsOn(target4);
+////        target4.addToRequiredFor(target6);
+//
+//        graph.addNewTargetToTheGraph(target1, target2, target3, target4, target5, target6);
+//    }
 }

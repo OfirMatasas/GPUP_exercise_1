@@ -1,6 +1,7 @@
 package resources.checker;
 
 import myExceptions.DoubledTarget;
+import myExceptions.EmptyGraph;
 import myExceptions.InvalidConnectionBetweenTargets;
 import resources.generated.GPUPDescriptor;
 import resources.generated.GPUPTarget;
@@ -13,11 +14,14 @@ public class ResourceChecker{
 
     enum DependencyType { requiredFor, dependsOn};
 
-    public Graph checkResource(GPUPDescriptor descriptor) throws InvalidConnectionBetweenTargets, DoubledTarget {
+    public Graph checkResource(GPUPDescriptor descriptor) throws InvalidConnectionBetweenTargets, DoubledTarget, EmptyGraph {
         List<GPUPTarget> gpupTargetsAsList = descriptor.getGPUPTargets().getGPUPTarget();
         Graph graph = FillTheGraphWithTargets(gpupTargetsAsList);
         Target currentTarget, secondTarget;
         String currentTargetName, secondTargetName;
+
+        if(descriptor.getGPUPTargets() == null || descriptor.getGPUPTargets().getGPUPTarget() == null)
+            throw new EmptyGraph();
 
         for(GPUPTarget currentgpupTarget : gpupTargetsAsList)
         {
@@ -28,7 +32,7 @@ public class ResourceChecker{
                 continue;
 
             for(GPUPTargetDependencies.GPUGDependency dep :
-            currentgpupTarget.getGPUPTargetDependencies().getGPUGDependency())
+                    currentgpupTarget.getGPUPTargetDependencies().getGPUGDependency())
             {
                 secondTarget = graph.getGraphTargets().get(dep.getValue());
                 if(secondTarget == null)

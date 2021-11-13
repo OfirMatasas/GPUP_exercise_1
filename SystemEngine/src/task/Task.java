@@ -1,9 +1,6 @@
 package task;
 
-import myExceptions.DoubledTarget;
-import myExceptions.FileNotFound;
-import myExceptions.InvalidConnectionBetweenTargets;
-import myExceptions.NotXMLFile;
+import myExceptions.*;
 import resources.checker.ResourceChecker;
 import resources.generated.GPUPDescriptor;
 import target.Graph;
@@ -25,10 +22,12 @@ public abstract class Task {
     private Instant timeStarted, timeEnded;
     private Duration totalTimeSpentOnTask;
     protected Random rand;
+    protected TaskOutput taskOutput;
 
     public Task() {
         this.targetsParameters = new HashMap<>();
         this.rand = new Random();
+        this.taskOutput = new TaskOutput();
     }
 
     public Map<Target, TaskParameters> getTargetParameters()
@@ -58,9 +57,9 @@ public abstract class Task {
 
     public void clearTaskHistory(Graph graph)
     {
-        graph.setAllTargetruntimeStatusToDefault();
+        graph.setAllTargetRuntimeStatusToDefault();
         graph.setAllTargetWasVisitedToDefault();
-        graph.setAllTargetruntimeStatusToDefault();
+        graph.setAllTargetResultStatusToDefault();
     }
     
     protected Boolean isRecheckingTargetNecessary(Target target)
@@ -75,7 +74,7 @@ public abstract class Task {
 
     abstract public void executeTaskOnTarget(Target target);
 
-    abstract public void executeTask(Graph graph, Boolean fromScratch, GraphSummary graphSummary);
+    abstract public void executeTask(Graph graph, Boolean fromScratch, GraphSummary graphSummary) throws OpeningFileCrash, FileNotFound;
     abstract public Set<Target> makeExecutableTargetsSet(Graph graph, Boolean fromScratch);
 
     public Set<Target> addNewTargetsToExecutableSet(Target lastTargetFinished)
@@ -124,7 +123,7 @@ public abstract class Task {
         return descriptor;
     }
 
-    public Graph extractFromXMLToGraph(Path path) throws NotXMLFile, FileNotFound, DoubledTarget, InvalidConnectionBetweenTargets {
+    public Graph extractFromXMLToGraph(Path path) throws NotXMLFile, FileNotFound, DoubledTarget, InvalidConnectionBetweenTargets, EmptyGraph {
         if(!path.getFileName().toString().endsWith(".xml"))
         {
             throw new NotXMLFile(path.getFileName().toString());
@@ -136,9 +135,10 @@ public abstract class Task {
         //The file can be executed
         GPUPDescriptor descriptor = fromXmlFileToObject(path);
         ResourceChecker checker = new ResourceChecker();
-
         Graph graph = checker.checkResource(descriptor);
-        graph.calculateProperties();
+
+        if(graph != null)
+            graph.calculateProperties();
 
         return graph;
     }
