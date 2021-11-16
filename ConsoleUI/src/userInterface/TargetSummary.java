@@ -4,6 +4,8 @@ import target.Target;
 
 import java.io.Serializable;
 import java.time.Duration;
+import java.util.Objects;
+import java.util.Set;
 
 public class TargetSummary implements Serializable
 {
@@ -11,12 +13,15 @@ public class TargetSummary implements Serializable
     private String targetName;
     private String extraInformation;
     private Target.ResultStatus resultStatus;
+    private boolean isSkipped;
+//    private Set<String> skippedTargets;
 
     public TargetSummary(String targetName) {
         this.targetName = targetName;
         this.time = Duration.ZERO;
         this.extraInformation = null;
-        this.resultStatus = Target.ResultStatus.Frozen;
+        this.resultStatus = Target.ResultStatus.Failure;
+        this.isSkipped = false;
     }
 
     public TargetSummary(Duration time, String targetName, String extraInformation, Target.ResultStatus resultStatus) {
@@ -24,6 +29,10 @@ public class TargetSummary implements Serializable
         this.targetName = targetName;
         this.extraInformation = extraInformation;
         this.resultStatus = resultStatus;
+    }
+
+    public void setSkipped(boolean skipped) {
+        isSkipped = skipped;
     }
 
     public Duration getTime() {
@@ -57,4 +66,29 @@ public class TargetSummary implements Serializable
     public void setResultStatus(Target.ResultStatus resultStatus) {
         this.resultStatus = resultStatus;
     }
+
+    public boolean isSkipped() {
+        return this.isSkipped;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        TargetSummary that = (TargetSummary) o;
+        return Objects.equals(targetName, that.targetName);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(targetName);
+    }
+
+//    public Set<String> getSkippedTargets() {
+//        return skippedTargets;
+//    }
+//
+//    public void setSkippedTargets(Set<String> skippedTargets) {
+//        this.skippedTargets = skippedTargets;
+//    }
 }

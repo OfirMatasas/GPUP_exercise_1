@@ -31,11 +31,11 @@ public class TaskOutput
 
             if(targetSummary.getExtraInformation() != null)
             {
-                targetExtraInfo = "Target's extra information: " + targetSummary.getExtraInformation() +"\r\n";
+                targetExtraInfo = "Target's extra information: " + targetSummary.getExtraInformation() +"\n";
                 os.write(targetExtraInfo.getBytes(StandardCharsets.UTF_8));
             }
 
-            totalTimeFormatted = String.format("The system is going to sleep for %02d:%02d:%02d\r\n",
+            totalTimeFormatted = String.format("The system is going to sleep for %02d:%02d:%02d\n",
                     time.toHours(), time.toMinutes(), time.getSeconds());
             os.write(totalTimeFormatted.getBytes(StandardCharsets.UTF_8));
         }
@@ -61,6 +61,18 @@ public class TaskOutput
 
             result = "The result: " + targetSummary.getResultStatus().toString() + ".\n";
             os.write(result.getBytes(StandardCharsets.UTF_8));
+
+//            if(!targetSummary.isSkipped() && targetSummary.getResultStatus().equals(Target.ResultStatus.Failure))
+//            {
+//                os.write("Targets that have been skipped: ".getBytes(StandardCharsets.UTF_8));
+//                for(String skippedTargetName : targetSummary.getSkippedTargets())
+//                {
+//                    String skippedTargetNameSpaced = skippedTargetName + " ";
+//                    os.write(skippedTargetNameSpaced.getBytes(StandardCharsets.UTF_8));
+//                }
+//                os.write(("\n").getBytes(StandardCharsets.UTF_8));
+//            }
+
             os.write("------------------------------------------\n".getBytes(StandardCharsets.UTF_8));
         }
         catch (Exception e) {
@@ -91,38 +103,12 @@ public class TaskOutput
             failed = "Number of targets failed: " + results.get(Target.ResultStatus.Failure) + "\n";
             os.write(failed.getBytes(StandardCharsets.UTF_8));
 
-            frozen = "Number of targets frozen: " + results.get(Target.ResultStatus.Frozen) + "\n";
-            os.write(frozen.getBytes(StandardCharsets.UTF_8));
-
             for(TargetSummary currentTarget : graphSummary.getTargetsSummaryMap().values())
                 outputTargetTaskSummary(os, currentTarget);
             os.write("----------------------------------\n".getBytes(StandardCharsets.UTF_8));
         }
         catch (Exception e) {
             System.out.println("Couldn't write to " + graphSummary.getGraphName() + ".log");
-        }
-    }
-
-    public void printGraphTaskSummary(OutputStream os, TargetSummary targetSummary)
-    {
-        try
-        {
-            Duration time = targetSummary.getTime();
-
-            String timeSpentFormatted = String.format("The system went to sleep for %02d:%02d:%02d\n",
-                    time.toHours(), time.toMinutes(), time.getSeconds());
-            os.write(timeSpentFormatted.getBytes(StandardCharsets.UTF_8));
-
-            String targetTasked, result;
-
-            targetTasked = "Task on target " + targetSummary.getTargetName() + " ended.\n";
-            os.write(targetTasked.getBytes(StandardCharsets.UTF_8));
-
-            result = "The result: " + targetSummary.getResultStatus().toString() + ".\n";
-            os.write(result.getBytes(StandardCharsets.UTF_8));
-        }
-        catch (Exception e) {
-            System.out.println("Couldn't write to file " + targetSummary.getTargetName() + ".log");
         }
     }
 
@@ -141,17 +127,18 @@ public class TaskOutput
             result = "Target's result status :" + targetSummary.getResultStatus() + "\n";
             os.write(result.getBytes(StandardCharsets.UTF_8));
 
-            timeSpentFormatted = String.format("Target's running time: %02d:%02d:%02d\n", time.toHours(), time.toMinutes(), time.getSeconds());
-            os.write(timeSpentFormatted.getBytes(StandardCharsets.UTF_8));
-
+            if(!targetSummary.isSkipped())
+            {
+                timeSpentFormatted = String.format("Target's running time: %02d:%02d:%02d\n", time.toHours(), time.toMinutes(), time.getSeconds());
+                os.write(timeSpentFormatted.getBytes(StandardCharsets.UTF_8));
+            }
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println(e.getMessage());
         }
-
     }
 
     public Path createNewDirectoryOfTaskLogs(String taskName) throws OpeningFileCrash {
-        directoryPath = "C:\\JavaProjects\\GPUP_exercise_1-master (1)\\GPUP_exercise_1-master\\SystemEngine\\src\\resources\\Schema and xml";
+        directoryPath = "C:\\Users\\matas\\Desktop\\GPUP outputs";
         SimpleDateFormat formatter = new SimpleDateFormat("dd.MM.yyyy HH.mm.ss");
         Date date = new Date();
 

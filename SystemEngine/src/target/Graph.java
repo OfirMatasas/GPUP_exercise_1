@@ -30,6 +30,11 @@ public class Graph implements Serializable {
         return targetsByProperties.get(property).size();
     }
 
+    public Boolean isEmpty()
+    {
+        return graphTargets.size() == 0;
+    }
+
     public Map<String, Target> getGraphTargets() {
         return graphTargets;
     }
@@ -131,7 +136,7 @@ public class Graph implements Serializable {
     public void setAllTargetResultStatusToDefault()
     {
         for(Target currentTarget : graphTargets.values())
-            currentTarget.setResultStatus(Target.ResultStatus.Frozen);
+            currentTarget.setResultStatus(Target.ResultStatus.Failure);
     }
 
     public void setAllTargetRuntimeStatusToDefault()

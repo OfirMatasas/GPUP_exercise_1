@@ -8,7 +8,7 @@ import java.util.Set;
 
 public class Target implements Serializable {
     static public enum RuntimeStatus { Frozen, Skipped, Waiting, InProcess, Finished }
-    static public enum ResultStatus { Success, Warning, Failure, Frozen }
+    static public enum ResultStatus { Success, Warning, Failure }
     static public enum TargetProperty { LEAF, MIDDLE, ROOT, INDEPENDENT }
     static public enum Connection { REQUIRED_FOR, DEPENDS_ON }
 
@@ -49,7 +49,7 @@ public class Target implements Serializable {
         this.dependsOnTargets = new HashSet<>();
         this.requireForTargets = new HashSet<>();
         this.runtimeStatus = RuntimeStatus.Waiting;
-        this.resultStatus = ResultStatus.Frozen;
+        this.resultStatus = ResultStatus.Failure;
         this.targetProperty = TargetProperty.INDEPENDENT;
         this.wasVisited=false;
     }

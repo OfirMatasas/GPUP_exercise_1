@@ -61,21 +61,11 @@ public abstract class Task {
         graph.setAllTargetWasVisitedToDefault();
         graph.setAllTargetResultStatusToDefault();
     }
-    
-    protected Boolean isRecheckingTargetNecessary(Target target)
-    {
-        if(!target.getWasVisited())
-            return false;
-        else if(target.getResultStatus().equals(Target.ResultStatus.Success))
-            return false;
 
-        return true;
-    }
+    abstract public void executeTaskOnTarget(Target target, GraphSummary graphSummary);
 
-    abstract public void executeTaskOnTarget(Target target);
-
-    abstract public void executeTask(Graph graph, Boolean fromScratch, GraphSummary graphSummary) throws OpeningFileCrash, FileNotFound, EmptyGraph;
-    abstract public Set<Target> makeExecutableTargetsSet(Graph graph, Boolean fromScratch);
+    abstract public void executeTask(Graph graph, Boolean fromScratch, GraphSummary graphSummary) throws OpeningFileCrash, FileNotFound;
+    abstract public Set<Target> makeExecutableTargetsSet(Graph graph, GraphSummary graphSummary, Boolean fromScratch);
 
     public Set<Target> addNewTargetsToExecutableSet(Target lastTargetFinished)
     {
@@ -93,8 +83,7 @@ public abstract class Task {
             for(Target candidateDependsOn : candidateTarget.getDependsOnTargets())
             {
                 //If the candidate's depends-on-target is not succeeded (even with warning) - break
-                if(candidateDependsOn.getResultStatus().equals(Target.ResultStatus.Failure) ||
-                        candidateDependsOn.getResultStatus().equals(Target.ResultStatus.Frozen) )
+                if(candidateDependsOn.getResultStatus().equals(Target.ResultStatus.Failure))
                     addable = false;
             }
             //The candidate is not skipped and all of the targets it depends on are succeeded

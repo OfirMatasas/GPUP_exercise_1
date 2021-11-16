@@ -135,7 +135,6 @@ public class TaskRequirements {
         System.out.println("Number of targets succeeded: " + results.get(Target.ResultStatus.Success));
         System.out.println("Number of targets succeeded with warnings: " + results.get(Target.ResultStatus.Warning));
         System.out.println("Number of targets failed: " + results.get(Target.ResultStatus.Failure));
-        System.out.println("Number of targets frozen: " + results.get(Target.ResultStatus.Frozen));
 
         for(TargetSummary currentTarget : graphSummary.getTargetsSummaryMap().values())
             printTargetTaskSummary(currentTarget);

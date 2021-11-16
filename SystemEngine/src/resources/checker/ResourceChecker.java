@@ -17,6 +17,7 @@ public class ResourceChecker{
     public Graph checkResource(GPUPDescriptor descriptor) throws InvalidConnectionBetweenTargets, DoubledTarget, EmptyGraph {
         List<GPUPTarget> gpupTargetsAsList = descriptor.getGPUPTargets().getGPUPTarget();
         Graph graph = FillTheGraphWithTargets(gpupTargetsAsList);
+        graph.setGraphName(descriptor.getGPUPConfiguration().getGPUPGraphName());
         Target currentTarget, secondTarget;
         String currentTargetName, secondTargetName;
 

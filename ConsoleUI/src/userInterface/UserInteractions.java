@@ -1,7 +1,9 @@
 package userInterface;
 
+import com.sun.scenario.effect.impl.prism.ps.PPSBlend_SRC_OUTPeer;
 import myExceptions.EmptyGraph;
 import myExceptions.FileNotFound;
+import myExceptions.NoGraphExisted;
 import myExceptions.OpeningFileCrash;
 import target.Graph;
 import target.Target;
@@ -17,21 +19,19 @@ import java.util.*;
 public class UserInteractions implements OutputInterface, InputInterface {
 
     static Scanner scanner = new Scanner(System.in);
-    Graph graph = new Graph();
+    Graph graph;
     Task TaskExecuting = new SimulationTask();
-    Boolean firstRun = true;
     GraphSummary graphSummary;
-    static final Object EXIT = null;
     static final Integer MAX_CHOICE = 8;
+    static final Integer EXIT_PROGRAM = 6;
 
     public void SystemExecute() {
 
         System.out.println("Welcome to our project!");
         Integer userSelection = 0;
         Boolean incremental;
-        try {
-            while (userSelection != 6) {
-
+        while (true) {
+            try {
                 printMenu();
                 userSelection = getUserSelectionFromMenu();
 
@@ -54,12 +54,8 @@ public class UserInteractions implements OutputInterface, InputInterface {
                     }
                     case 5: {
                         incremental = askForIncremental();
-                        try {
-                            TaskExecuting.executeTask(graph, incremental, graphSummary);
-                        } catch (OpeningFileCrash | FileNotFound e) {
-                            System.out.println(e.getMessage());
-                        }
-                        firstRun = false;
+                        TaskExecuting.executeTask(graph, incremental, graphSummary);
+                        graphSummary.setFirstRun(false);
                         break;
                     }
                     case 6: {
@@ -79,38 +75,41 @@ public class UserInteractions implements OutputInterface, InputInterface {
                         break;
                     }
                 }
-
             }
-        }
-        catch (InputMismatchException ex) {
-            System.out.println(ex.getMessage());
-        }
-        catch (EmptyGraph ex)
-        {
-            System.out.println(ex.getMessage());
-
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
+            catch (Exception ex)
+            {
+                System.out.println(ex.getMessage());
+            }
         }
     }
 
-    public Boolean askForIncremental() {
-        if(firstRun)
+    public Boolean askForIncremental() throws EmptyGraph, NoGraphExisted {
+        try {
+            if(graph.isEmpty())
+                throw new EmptyGraph();
+
+            if(graphSummary.getFirstRun())
+            {
+                graphSummary = new GraphSummary(graph);
+                return true;
+            }
+
+            System.out.println("Would you like to start from scratch? (y/n)");
+            Boolean fromScratch = yesOrNo();
+
+            if(fromScratch)
+            {
+                graphSummary = new GraphSummary(graph);
+                TaskExecuting.clearTaskHistory(graph);
+            }
+
+            return fromScratch;
+        }
+        catch(NullPointerException ex)
         {
-            graphSummary = new GraphSummary(graph);
-            return true;
+            throw new NoGraphExisted();
         }
 
-        System.out.println("Would you like to start from scratch? (y/n)");
-        Boolean fromScratch = yesOrNo();
-
-        if(fromScratch)
-        {
-            graphSummary = new GraphSummary(graph);
-            TaskExecuting.clearTaskHistory(graph);
-        }
-
-        return fromScratch;
     }
 
     public void printTargetTaskSummary(TargetSummary targetSummary)
@@ -132,14 +131,13 @@ public class UserInteractions implements OutputInterface, InputInterface {
         {
             try {
                 System.out.println("Please enter the full path of the file you would like to load:");
-                scanner.nextLine();
                 String filePath = scanner.nextLine();
                 filePath = filePath.trim();
 
                 Path path = Paths.get(filePath);
                 graph = TaskExecuting.extractFromXMLToGraph(path);
-                System.out.println("Graph loaded successfully from " + path.getFileName().toString() + " !");
-                firstRun = true;
+                System.out.println("Graph " + graph.getGraphName() + " loaded successfully from " + path.getFileName().toString() + " !");
+                graphSummary = new GraphSummary(graph);
                 return;
             }
             catch(Exception ex)
@@ -153,56 +151,65 @@ public class UserInteractions implements OutputInterface, InputInterface {
 
     public static Boolean yesOrNo()
     {
-        Character userSelection = 'j';
-        while (!userSelection.equals('y') && (!userSelection.equals('Y')) && (!userSelection.equals('n')) && (!userSelection.equals('N')))
+        Character userSelection;
+        while (true)
         {
             userSelection = scanner.next().charAt(0);
+            scanner.nextLine();
 
             if (userSelection.toString().toUpperCase().equals("Y"))
                 return true;
             else if (userSelection.toString().toUpperCase().equals("N"))
                 return false;
-            else
-            {
-                System.out.println("Invalid selection. Try again (y/n): ");
-                scanner.nextLine();
-            }
+
+            System.out.println("Invalid selection. Try again (y/n): ");
         }
-        return userSelection.equals('y') || userSelection.equals('Y');
     }
 
     @Override
-    public void printTargetInformation()
-    {
-        Boolean tryAgain = true;
-
-        while(tryAgain)
-        {
-            if(graph.getGraphTargets().size() == 0)
+    public void printTargetInformation() throws NoGraphExisted {
+        try {
+            if(graph.isEmpty())
             {
-                System.out.println("There're no targets on the graph!");
-                System.out.println("Please load a graph from file.");
+                System.out.println("The graph is empty!");
                 return;
             }
 
-            System.out.print("Enter target's name: ");
-            String targetName = scanner.next();
-            if(graph.getGraphTargets().containsKey(targetName))
+            Boolean tryAgain = true;
+
+            while(tryAgain)
             {
-                Target selectedTarget = graph.getGraphTargets().get(targetName);
-                System.out.println("Target's name: " + targetName);
-                System.out.println("Target's property: " + selectedTarget.getTargetProperty());
+                if(graph.getGraphTargets().size() == 0)
+                {
+                    System.out.println("There're no targets on the graph!");
+                    System.out.println("Please load a graph from file.");
+                    return;
+                }
 
-                printRequiredForTargets(selectedTarget);
-                printDependsOnTargets(selectedTarget);
-                printTargetExtraInformation(selectedTarget);
-                break;
+                System.out.print("Enter target's name: ");
+                String targetName = scanner.next();
+                if(graph.getGraphTargets().containsKey(targetName))
+                {
+                    Target selectedTarget = graph.getGraphTargets().get(targetName);
+                    System.out.println("Target's name: " + targetName);
+                    System.out.println("Target's property: " + selectedTarget.getTargetProperty());
+
+                    printRequiredForTargets(selectedTarget);
+                    printDependsOnTargets(selectedTarget);
+                    printTargetExtraInformation(selectedTarget);
+                    break;
+                }
+
+                System.out.println("There's no target named " + targetName + " in graph.");
+                System.out.println("Would you like to try again? (y/n)");
+                tryAgain = yesOrNo();
             }
-
-            System.out.println("There's no target named " + targetName + " in graph.");
-            System.out.println("Would you like to try again? (y/n)");
-            tryAgain = yesOrNo();
         }
+        catch(NullPointerException ex)
+        {
+            throw new NoGraphExisted();
+        }
+
     }
 
     @Override
@@ -240,24 +247,23 @@ public class UserInteractions implements OutputInterface, InputInterface {
     @Override
     public Integer getUserSelectionFromMenu()
     {
-        try {
-            Integer selection = 0;
+        Integer selection = 0;
 
-            while(selection <= 0 || selection > MAX_CHOICE)
-            {
-                selection = scanner.nextInt();
-
-                if(selection <= 0 || selection > MAX_CHOICE)
-                    System.out.println("Please choose between 1 and " + UserInteractions.MAX_CHOICE + ".");
-
-            }
-
-            return selection;
-        }
-        catch(InputMismatchException ex)
+        while(true)
         {
-            System.out.println("Please enter an integer between 1 and " + UserInteractions.MAX_CHOICE + ".");
-            return getUserSelectionFromMenu();
+            try {
+                selection = scanner.nextInt();
+                scanner.nextLine();
+
+                if (selection > 0 && selection <= MAX_CHOICE)
+                    return selection;
+                System.out.println("Please choose between 1 and " + UserInteractions.MAX_CHOICE + ".");
+            }
+            catch (InputMismatchException ex)
+            {
+                System.out.println("Please enter an integer between 1 and " + UserInteractions.MAX_CHOICE + ".");
+                scanner.nextLine();
+            }
         }
     }
 
@@ -272,66 +278,98 @@ public class UserInteractions implements OutputInterface, InputInterface {
         System.out.println("6. Exit.");
         System.out.println("7. Save system status.");
         System.out.println("8. Load system status.");
-
     }
 
     @Override
-    public void printTargetConnectionStatus() throws EmptyGraph
-    {
-        if (graph.getGraphTargets().size() == 0)
-            throw new EmptyGraph();
-
-        else {
-            String sourceTargetName = null, destTargetName = null;
-            Target sourceTarget = null, destTarget = null;
-            Target.Connection connection = Target.Connection.DEPENDS_ON;
-
-            int toContinueTmp = 1;
-            int connectionChoice = 0;
-
-            while (toContinueTmp != 0) {
-                System.out.print("Please enter the name of the source target: ");
-                sourceTargetName = scanner.next();
-                System.out.print("Please enter the name of the destination target: ");
-                destTargetName = scanner.next();
-                sourceTarget = graph.getGraphTargets().get(sourceTargetName);
-                destTarget = graph.getGraphTargets().get(destTargetName);
-
-                if (sourceTarget == null || destTarget == null) {
-                    if (graph.getGraphTargets().get(sourceTargetName) == null)
-                        System.out.println("The source target you've entered doesn't exist in the graph!");
-                    else
-                        System.out.println("The destination target you've entered doesn't exist in the graph!");
-
-                    System.out.println("Would you like to try again? (0 - no, 1 - yes)");
-                    toContinueTmp = scanner.nextInt();
-
-                    if (toContinueTmp == 0)
-                        return;
-                } else
-                    break;
-            }
-
-            if (!graph.prechecksForTargetsConnection(sourceTargetName, destTargetName)) {
-                System.out.println("There're no paths between " + sourceTargetName + " and " + destTargetName);
+    public void printTargetConnectionStatus() throws NoGraphExisted {
+        try {
+            if(graph.isEmpty())
+            {
+                System.out.println("The graph is empty!");
                 return;
             }
 
-            System.out.print("Please enter the connection you'd like to see between the source and destination targets: ");
-            System.out.println("0 - Source depends on destination, anything else - Source required for destination");
-            connectionChoice = scanner.nextInt();
-            if (connectionChoice != 0)
-                connection = Target.Connection.REQUIRED_FOR;
+            String sourceTargetName = null, destTargetName = null;
+            Target sourceTarget = null, destTarget = null;
+            Target.Connection connection;
+            Character connectionChoice;
 
-            ArrayList<String> paths = graph.getPathsFromTargets(sourceTarget, destTarget, connection);
+            while (true)
+            {
+                while (true)
+                {
+                    System.out.print("Please enter the name of the source target: ");
+                    sourceTargetName = scanner.nextLine();
+                    sourceTarget = graph.getGraphTargets().get(sourceTargetName);
+                    if (sourceTarget != null)
+                        break;
 
-            if (paths.size() == 0)
-                System.out.println("There're no paths between " + sourceTargetName + " and " + destTargetName + " as required.");
-            else {
-                System.out.println("There're " + paths.size() + " paths between " + sourceTargetName + " and " + destTargetName + ":");
-                for (String currentPath : paths)
-                    System.out.println(currentPath);
+                    System.out.println("There's no " + sourceTargetName + " target in the graph.");
+                    System.out.println("Would you like to try again? (y/n)");
+                    if(!yesOrNo())
+                        return;
+                }
+
+                while (true)
+                {
+                    System.out.print("Please enter the name of the destination target: ");
+                    destTargetName = scanner.nextLine();
+                    destTarget = graph.getGraphTargets().get(destTargetName);
+                    if (destTarget != null)
+                        break;
+
+                    System.out.println("There's no " + destTargetName + " target in the graph.");
+                    System.out.println("Would you like to try again? (y/n)");
+                    if(!yesOrNo())
+                        return;
+                }
+
+                if (!graph.prechecksForTargetsConnection(sourceTargetName, destTargetName)) {
+                    System.out.println("There're no paths between " + sourceTargetName + " and " + destTargetName);
+                    return;
+                }
+
+                while(true)
+                {
+                    System.out.println("Please enter the connection you'd like to see between the source and destination targets: ");
+                    System.out.println("d - Source depends on destination, r - Source required for destination");
+
+                    connectionChoice = scanner.next().charAt(0);
+                    scanner.nextLine();
+
+                    if (connectionChoice.toString().toUpperCase().equals("R"))
+                    {
+                        connection = Target.Connection.REQUIRED_FOR;
+                        break;
+                    }
+                    else if(connectionChoice.toString().toUpperCase().equals("D"))
+                    {
+                        connection = Target.Connection.DEPENDS_ON;
+                        break;
+                    }
+                    else
+                        System.out.print("Please enter a valid choice (d/r): ");
+                }
+
+                ArrayList<String> paths = graph.getPathsFromTargets(sourceTarget, destTarget, connection);
+
+                if (paths.size() == 0)
+                    System.out.println("There're no paths between " + sourceTargetName + " and " + destTargetName + " as required.");
+                else
+                {
+                    System.out.println("There're " + paths.size() + " paths between " + sourceTargetName + " and " + destTargetName + ":");
+                    for (String currentPath : paths)
+                        System.out.println(currentPath);
+                }
+
+                System.out.println("Would you like to find more connections? (y/n)");
+                if(!yesOrNo())
+                    return;
             }
+        }
+        catch(NullPointerException ex)
+        {
+            throw new NoGraphExisted();
         }
     }
 
@@ -341,39 +379,55 @@ public class UserInteractions implements OutputInterface, InputInterface {
     }
 
     @Override
-    public void saveSystemStatus() throws FileNotFoundException {
-        String savePath= getPathFromUser();
-        try(ObjectOutputStream out= new ObjectOutputStream(new FileOutputStream(savePath)))
-        {
-            out.writeObject(graphSummary);
-            out.flush();
-            //check if was written succesfully
-        } catch (IOException ex)
-        {
-           ex.getMessage();
-        }
+    public void saveSystemStatus() throws NoGraphExisted {
+        if(graph == null)
+            throw new NoGraphExisted();
 
+        while (true) {
+            System.out.println("Enter the absolute path of the file you'd like to save the system to: ");
+            String savePath = scanner.nextLine();
+
+            try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(savePath))) {
+                out.writeObject(graph);
+                out.writeObject(graphSummary);
+                out.flush();
+                out.close();
+                //check if was written successfully
+                System.out.println("File saved successfully!");
+                return;
+            } catch (IOException ex) {
+                ex.getMessage();
+
+                System.out.println("Would you like to try again? (y/n)");
+
+                if (!yesOrNo())
+                    return;
+            }
+        }
     }
 
     @Override
-    public void loadSystemStatus() throws FileNotFoundException
+    public void loadSystemStatus()
     {
-        String loadPath= getPathFromUser();
-        try(ObjectInputStream in= new ObjectInputStream(new FileInputStream(loadPath)))
+        while(true)
         {
-           graph= (Graph)in.readObject();
+            System.out.println("Enter the absolute path of the file you'd like to load: ");
+            String loadPath = scanner.nextLine();
 
-            //check if was written succesfully
-        } catch (IOException | ClassNotFoundException ex)
-        {
-            ex.getMessage();
+            try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(loadPath))) {
+                graph = (Graph)in.readObject();
+                graphSummary = (GraphSummary)in.readObject();
+                //check if was written successfully
+                System.out.println("Loaded " + graphSummary.getGraphName() + " graph successfully from file!");
+                return;
+            } catch (Exception ex) {
+                ex.getMessage();
+                System.out.println("Would you like to try again? (y/n)");
+
+                if(!yesOrNo())
+                    return;
+            }
         }
-    }
-
-    public String getPathFromUser()
-    {
-        System.out.println("Please enter the path you would like to save system status : ");
-        return scanner.nextLine();
     }
 
     public void printTotalExecutionTime()
@@ -382,21 +436,25 @@ public class UserInteractions implements OutputInterface, InputInterface {
         System.out.format("Total execution time for the task: %02d:%02d:%02d\n", totalTimeOfTask.toHours(), totalTimeOfTask.toMinutes(), totalTimeOfTask.getSeconds());
     }
 
-    public void printGraphInformation() throws EmptyGraph {
-        if(graph.getGraphTargets().size()==0)
-            throw new EmptyGraph();
+    public void printGraphInformation() throws NoGraphExisted {
+        try {
+            if(graph.isEmpty())
+            {
+                System.out.println("The graph is empty!");
+                return;
+            }
 
-        else
-        {
             Map<String, Target> graphTargets = graph.getGraphTargets();
-
             System.out.println("Number of targets : " + graphTargets.size());
             System.out.println("Number of leaf targets : " + graph.numberOfTargetsByProperty(Target.TargetProperty.LEAF));
             System.out.println("Number of root targets : " + graph.numberOfTargetsByProperty(Target.TargetProperty.ROOT));
             System.out.println("Number of middle targets : " + graph.numberOfTargetsByProperty(Target.TargetProperty.MIDDLE));
             System.out.println("Number of independent targets : " + graph.numberOfTargetsByProperty(Target.TargetProperty.INDEPENDENT));
         }
-
+        catch(NullPointerException ex)
+        {
+            throw new NoGraphExisted();
+        }
     }
 
 //    public void initGraph()
