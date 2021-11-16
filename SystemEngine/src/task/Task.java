@@ -74,7 +74,7 @@ public abstract class Task {
 
     abstract public void executeTaskOnTarget(Target target);
 
-    abstract public void executeTask(Graph graph, Boolean fromScratch, GraphSummary graphSummary) throws OpeningFileCrash, FileNotFound;
+    abstract public void executeTask(Graph graph, Boolean fromScratch, GraphSummary graphSummary) throws OpeningFileCrash, FileNotFound, EmptyGraph;
     abstract public Set<Target> makeExecutableTargetsSet(Graph graph, Boolean fromScratch);
 
     public Set<Target> addNewTargetsToExecutableSet(Target lastTargetFinished)

@@ -1,11 +1,12 @@
 package target;
 
+import java.io.Serializable;
 import java.time.Duration;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
-public class Target {
+public class Target implements Serializable {
     static public enum RuntimeStatus { Frozen, Skipped, Waiting, InProcess, Finished }
     static public enum ResultStatus { Success, Warning, Failure, Frozen }
     static public enum TargetProperty { LEAF, MIDDLE, ROOT, INDEPENDENT }

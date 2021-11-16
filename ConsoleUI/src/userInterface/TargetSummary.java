@@ -2,9 +2,10 @@ package userInterface;
 
 import target.Target;
 
+import java.io.Serializable;
 import java.time.Duration;
 
-public class TargetSummary
+public class TargetSummary implements Serializable
 {
     private Duration time;
     private String targetName;

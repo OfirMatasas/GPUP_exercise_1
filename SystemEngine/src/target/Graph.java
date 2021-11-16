@@ -1,8 +1,9 @@
 package target;
 
+import java.io.Serializable;
 import java.util.*;
 
-public class Graph {
+public class Graph implements Serializable {
     private String graphName;
     private Map<String, Target> graphTargets;
     private Map<Target.TargetProperty, Set<Target>> targetsByProperties;

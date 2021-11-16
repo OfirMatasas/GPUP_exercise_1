@@ -1,5 +1,6 @@
 package task;
 
+import myExceptions.EmptyGraph;
 import myExceptions.FileNotFound;
 import myExceptions.OpeningFileCrash;
 import target.Graph;
@@ -60,7 +61,10 @@ public class SimulationTask extends Task{
         getTargetsParameters().get(target).stopTheClock();
     }
 
-    public void executeTask(Graph graph, Boolean fromScratch, GraphSummary graphSummary) throws OpeningFileCrash, FileNotFound {
+    public void executeTask(Graph graph, Boolean fromScratch, GraphSummary graphSummary) throws OpeningFileCrash, FileNotFound, EmptyGraph {
+        if(graph.getGraphTargets().size()==0)
+            throw new EmptyGraph();
+
         TaskParameters taskParameters = requirements.getTaskParametersFromUser();
         Path directoryPath = taskOutput.createNewDirectoryOfTaskLogs("Simulation Task");
         Path filePath;
@@ -68,6 +72,7 @@ public class SimulationTask extends Task{
         //Update target parameters
         for(Target currentTarget : graph.getGraphTargets().values())
         {
+            
             if(!(currentTarget.getResultStatus().equals(Target.ResultStatus.Success)
                     || currentTarget.getResultStatus().equals(Target.ResultStatus.Warning)))
             {
