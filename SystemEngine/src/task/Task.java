@@ -18,11 +18,13 @@ import java.time.Instant;
 import java.util.*;
 
 public abstract class Task {
-    private Map<Target, TaskParameters> targetsParameters;
+    protected Map<Target, TaskParameters> targetsParameters;
     private Instant timeStarted, timeEnded;
     private Duration totalTimeSpentOnTask;
     protected Random rand;
     protected TaskOutput taskOutput;
+    protected Graph graph;
+    protected GraphSummary graphSummary;
 
     public Task() {
         this.targetsParameters = new HashMap<>();
@@ -62,10 +64,10 @@ public abstract class Task {
         graph.setAllTargetResultStatusToDefault();
     }
 
-    abstract public void executeTaskOnTarget(Target target, GraphSummary graphSummary);
+    abstract public void executeTaskOnTarget(Target target);
 
     abstract public void executeTask(Graph graph, Boolean fromScratch, GraphSummary graphSummary) throws OpeningFileCrash, FileNotFound;
-    abstract public Set<Target> makeExecutableTargetsSet(Graph graph, GraphSummary graphSummary, Boolean fromScratch);
+    abstract public Set<Target> makeExecutableTargetsSet(Boolean fromScratch);
 
     public Set<Target> addNewTargetsToExecutableSet(Target lastTargetFinished)
     {

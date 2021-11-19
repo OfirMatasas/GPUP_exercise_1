@@ -17,7 +17,7 @@ public class GraphSummary implements Serializable {
     private Duration totalTime;
     private Instant timeStarted, timeEnded;
     private Map<String, TargetSummary> targetsSummaryMap;
-    private Map<Target.ResultStatus, Integer> allResultStatus;
+    private Map<TargetSummary.ResultStatus, Integer> allResultStatus;
     private Boolean firstRun;
     private Graph graph;
 
@@ -46,7 +46,7 @@ public class GraphSummary implements Serializable {
         this.graphName = graphName;
     }
 
-    public Map<Target.ResultStatus, Integer> getAllResultStatus() {
+    public Map<TargetSummary.ResultStatus, Integer> getAllResultStatus() {
         return allResultStatus;
     }
 
@@ -110,9 +110,9 @@ public class GraphSummary implements Serializable {
             }
         }
 
-        allResultStatus.put(Target.ResultStatus.Success, succeeded);
-        allResultStatus.put(Target.ResultStatus.Failure, failed);
-        allResultStatus.put(Target.ResultStatus.Warning, warning);
+        allResultStatus.put(TargetSummary.ResultStatus.Success, succeeded);
+        allResultStatus.put(TargetSummary.ResultStatus.Failure, failed);
+        allResultStatus.put(TargetSummary.ResultStatus.Warning, warning);
     }
 
 //    public Set<String> setAllRequiredForTargetsOnSkipped(Target failedTarget)

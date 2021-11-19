@@ -1,34 +1,61 @@
 package userInterface;
 
+import target.Graph;
 import target.Target;
 
 import java.io.Serializable;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Objects;
 import java.util.Set;
 
 public class TargetSummary implements Serializable
 {
+    static public enum RuntimeStatus { Frozen, Skipped, Waiting, InProcess, Finished }
+    static public enum ResultStatus { Success, Warning, Failure }
+
     private Duration time;
     private String targetName;
     private String extraInformation;
-    private Target.ResultStatus resultStatus;
+    private ResultStatus resultStatus;
+    private RuntimeStatus runtimeStatus;
     private boolean isSkipped;
+    private Instant timeStarted;
 //    private Set<String> skippedTargets;
 
     public TargetSummary(String targetName) {
         this.targetName = targetName;
         this.time = Duration.ZERO;
         this.extraInformation = null;
-        this.resultStatus = Target.ResultStatus.Failure;
+        this.resultStatus = ResultStatus.Failure;
+        this.runtimeStatus = RuntimeStatus.Frozen;
         this.isSkipped = false;
     }
 
-    public TargetSummary(Duration time, String targetName, String extraInformation, Target.ResultStatus resultStatus) {
+    public TargetSummary(Duration time, String targetName, String extraInformation, ResultStatus resultStatus) {
         this.time = time;
         this.targetName = targetName;
         this.extraInformation = extraInformation;
         this.resultStatus = resultStatus;
+    }
+
+    public void startTheClock()
+    {
+        timeStarted = Instant.now();
+    }
+
+    public void stopTheClock()
+    {
+        Instant timeEnded = Instant.now();
+        time = Duration.between(timeStarted, timeEnded);
+    }
+
+    public RuntimeStatus getRuntimeStatus() {
+        return runtimeStatus;
+    }
+
+    public void setRuntimeStatus(RuntimeStatus runtimeStatus) {
+        this.runtimeStatus = runtimeStatus;
     }
 
     public void setSkipped(boolean skipped) {
@@ -59,16 +86,25 @@ public class TargetSummary implements Serializable
         this.extraInformation = extraInformation;
     }
 
-    public Target.ResultStatus getResultStatus() {
+    public ResultStatus getResultStatus() {
         return resultStatus;
     }
 
-    public void setResultStatus(Target.ResultStatus resultStatus) {
+    public void setResultStatus(ResultStatus resultStatus) {
         this.resultStatus = resultStatus;
     }
 
     public boolean isSkipped() {
         return this.isSkipped;
+    }
+
+    public void setAllRequiredForTargetsRuntimeStatus(Target target, GraphSummary graphSummary, RuntimeStatus runtimeStatus)
+    {
+        for(Target requiredForTarget : target.getRequireForTargets())
+        {
+            graphSummary.getTargetsSummaryMap().get(requiredForTarget.getTargetName()).setRuntimeStatus(runtimeStatus);
+            setAllRequiredForTargetsRuntimeStatus(requiredForTarget, graphSummary, runtimeStatus);
+        }
     }
 
     @Override

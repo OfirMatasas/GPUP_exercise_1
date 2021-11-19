@@ -1,8 +1,5 @@
 package userInterface;
 
-import target.Graph;
-import target.Target;
-import task.Task;
 import task.TaskParameters;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
@@ -14,6 +11,13 @@ public class TaskRequirements {
 
     Scanner scanner = new Scanner(System.in);
 
+    public Boolean reuseTaskParameters()
+    {
+        System.out.println("There are existing parameters for this task.");
+        System.out.println("Would you like to re-use them?");
+        return UserInteractions.yesOrNo();
+    }
+
     public TaskParameters getTaskParametersFromUser()
     {
         Duration processingTime = null;
@@ -21,6 +25,7 @@ public class TaskRequirements {
         Boolean isRandom = true;
         Double successRate = -1.0, successWithWarnings = -1.0;
         TaskParameters taskParameters = new TaskParameters();
+
 
         System.out.print("Enter the processing time (in m/s) for each task: ");
         while(true)
@@ -99,55 +104,55 @@ public class TaskRequirements {
         return taskParameters;
     }
 
-    public void printStartOfTaskOnTarget(Task task, Target target)
-    {
-        Duration processingTime = task.getTargetsParameters().get(target).getProcessingTime();
-        System.out.println("------------------------------------------");
-        System.out.println("Task on target " + target.getTargetName() + " just started.");
-        System.out.println("Target's extra information: " + target.getExtraInformation());
-        System.out.format("The system is going to sleep for %02d:%02d:%02d\n", processingTime.toHours(), processingTime.toMinutes(), processingTime.getSeconds());
-    }
-
-    public void printEndOfTaskOnTarget(Task task, Target target)
-    {
-        Duration processingTime = task.getTargetsParameters().get(target).getProcessingTime();
-        System.out.format("The system went to sleep for %02d:%02d:%02d\n", processingTime.toHours(), processingTime.toMinutes(), processingTime.getSeconds());
-
-        System.out.println("Task on target " + target.getTargetName() + " ended.");
-        System.out.println("The result: " + target.getResultStatus().toString() + ".");
-        System.out.println("The runtime status: " + target.getRuntimeStatus().toString() + ".");
-    }
-
-    public void printStartOfTaskOnGraph(Graph graph)
-    {
-        System.out.println("Task started on graph!");
-    }
-
-    public void printGraphTaskSummary(GraphSummary graphSummary)
-    {
-        Duration time = graphSummary.getTime();
-        System.out.println("------------------------------------------");
-        System.out.println("Task on graph ended!!!");
-        System.out.format("Total time spent on task: %02d:%02d:%02d\n",
-                time.toHours(), time.toMinutes(), time.getSeconds());
-
-        Map<Target.ResultStatus, Integer> results = graphSummary.getAllResultStatus();
-        System.out.println("Number of targets succeeded: " + results.get(Target.ResultStatus.Success));
-        System.out.println("Number of targets succeeded with warnings: " + results.get(Target.ResultStatus.Warning));
-        System.out.println("Number of targets failed: " + results.get(Target.ResultStatus.Failure));
-
-        for(TargetSummary currentTarget : graphSummary.getTargetsSummaryMap().values())
-            printTargetTaskSummary(currentTarget);
-        System.out.println("----------------------------------");
-    }
-
-    public void printTargetTaskSummary(TargetSummary targetSummary)
-    {
-        Duration time = targetSummary.getTime();
-
-        System.out.println("-----------------------");
-        System.out.println("Target's name :" + targetSummary.getTargetName());
-        System.out.println("Target's result status :" + targetSummary.getResultStatus());
-        System.out.format("Target's running time: %02d:%02d:%02d\n", time.toHours(), time.toMinutes(), time.getSeconds());
-    }
+//    public void printStartOfTaskOnTarget(Task task, Target target)
+//    {
+//        Duration processingTime = task.getTargetsParameters().get(target).getProcessingTime();
+//        System.out.println("------------------------------------------");
+//        System.out.println("Task on target " + target.getTargetName() + " just started.");
+//        System.out.println("Target's extra information: " + target.getExtraInformation());
+//        System.out.format("The system is going to sleep for %02d:%02d:%02d\n", processingTime.toHours(), processingTime.toMinutes(), processingTime.getSeconds());
+//    }
+//
+//    public void printEndOfTaskOnTarget(Task task, TargetSummary target)
+//    {
+//        Duration processingTime = task.getTargetsParameters().get(target).getProcessingTime();
+//        System.out.format("The system went to sleep for %02d:%02d:%02d\n", processingTime.toHours(), processingTime.toMinutes(), processingTime.getSeconds());
+//
+//        System.out.println("Task on target " + target.getTargetName() + " ended.");
+//        System.out.println("The result: " + target.getResultStatus().toString() + ".");
+//        System.out.println("The runtime status: " + target.getRuntimeStatus().toString() + ".");
+//    }
+//
+//    public void printStartOfTaskOnGraph(Graph graph)
+//    {
+//        System.out.println("Task started on graph!");
+//    }
+//
+//    public void printGraphTaskSummary(GraphSummary graphSummary)
+//    {
+//        Duration time = graphSummary.getTime();
+//        System.out.println("------------------------------------------");
+//        System.out.println("Task on graph ended!!!");
+//        System.out.format("Total time spent on task: %02d:%02d:%02d\n",
+//                time.toHours(), time.toMinutes(), time.getSeconds());
+//
+//        Map<TargetSummary.ResultStatus, Integer> results = graphSummary.getAllResultStatus();
+//        System.out.println("Number of targets succeeded: " + results.get(TargetSummary.ResultStatus.Success));
+//        System.out.println("Number of targets succeeded with warnings: " + results.get(TargetSummary.ResultStatus.Warning));
+//        System.out.println("Number of targets failed: " + results.get(TargetSummary.ResultStatus.Failure));
+//
+//        for(TargetSummary currentTarget : graphSummary.getTargetsSummaryMap().values())
+//            printTargetTaskSummary(currentTarget);
+//        System.out.println("----------------------------------");
+//    }
+//
+//    public void printTargetTaskSummary(TargetSummary targetSummary)
+//    {
+//        Duration time = targetSummary.getTime();
+//
+//        System.out.println("-----------------------");
+//        System.out.println("Target's name :" + targetSummary.getTargetName());
+//        System.out.println("Target's result status :" + targetSummary.getResultStatus());
+//        System.out.format("Target's running time: %02d:%02d:%02d\n", time.toHours(), time.toMinutes(), time.getSeconds());
+//    }
 }

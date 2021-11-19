@@ -29,11 +29,11 @@ public class SimulationTask extends Task{
         super.clearTaskHistory(graph);
     }
 
-    public void executeTaskOnTarget(Target target, GraphSummary graphSummary)
+    public void executeTaskOnTarget(Target target)
     {
-        getTargetsParameters().get(target).startTheClock();
-        target.setWasVisited(true);
-        target.setRuntimeStatus(Target.RuntimeStatus.InProcess);
+        TargetSummary targetSummary = graphSummary.getTargetsSummaryMap().get(target.getTargetName());
+        targetSummary.startTheClock();
+        targetSummary.setRuntimeStatus(TargetSummary.RuntimeStatus.InProcess);
 
         Double result = Math.random();
 
@@ -44,24 +44,24 @@ public class SimulationTask extends Task{
 
             if(result < getTargetParameters().get(target).getSuccessWithWarnings())
             {
-                target.setResultStatus(Target.ResultStatus.Warning);
-                graphSummary.getTargetsSummaryMap().get(target.getTargetName()).setResultStatus(Target.ResultStatus.Warning);
+                targetSummary.setResultStatus(TargetSummary.ResultStatus.Warning);
+                graphSummary.getTargetsSummaryMap().get(target.getTargetName()).setResultStatus(TargetSummary.ResultStatus.Warning);
             }
             else
             {
-                target.setResultStatus(Target.ResultStatus.Success);
-                graphSummary.getTargetsSummaryMap().get(target.getTargetName()).setResultStatus(Target.ResultStatus.Success);
+                targetSummary.setResultStatus(TargetSummary.ResultStatus.Success);
+                graphSummary.getTargetsSummaryMap().get(target.getTargetName()).setResultStatus(TargetSummary.ResultStatus.Success);
             }
         }
         else //The task failed
         {
-            target.setResultStatus(Target.ResultStatus.Failure);
+            targetSummary.setResultStatus(TargetSummary.ResultStatus.Failure);
             graphSummary.setAllRequiredForAsSkipped(target);
 //            TargetSummary currentTargetSummary = graphSummary.getTargetsSummaryMap().get(target.getTargetName());
 //            currentTargetSummary.setSkippedTargets(graphSummary.setAllRequiredForTargetsOnSkipped(target));
         }
 
-        target.setRuntimeStatus(Target.RuntimeStatus.Finished);
+        targetSummary.setRuntimeStatus(TargetSummary.RuntimeStatus.Finished);
 
         try {
             Thread.sleep(getTargetsParameters().get(target).getProcessingTime().toMillis());
@@ -69,30 +69,29 @@ public class SimulationTask extends Task{
             e.printStackTrace();
         }
 
-        getTargetsParameters().get(target).stopTheClock();
+        graphSummary.getTargetsSummaryMap().get(target.getTargetName()).stopTheClock();
     }
 
     public void executeTask(Graph graph, Boolean fromScratch, GraphSummary graphSummary) throws OpeningFileCrash, FileNotFound {
-        TaskParameters taskParameters = requirements.getTaskParametersFromUser();
         Path directoryPath = taskOutput.createNewDirectoryOfTaskLogs("Simulation Task");
         Path filePath;
+        this.graph = graph;
+        this.graphSummary = graphSummary;
 
-        //Update target parameters
-        for(Target currentTarget : graph.getGraphTargets().values())
+        //Check if there are any task parameters saved from last execution
+        if(targetsParameters == null || !requirements.reuseTaskParameters())
         {
-            if(!(currentTarget.getResultStatus().equals(Target.ResultStatus.Success)
-                    || currentTarget.getResultStatus().equals(Target.ResultStatus.Warning)))
-            {
-                getTargetParameters().put(currentTarget, taskParameters);
-                graphSummary.getTargetsSummaryMap().get(currentTarget.getTargetName()).setTime(taskParameters.getProcessingTime());
-            }
+            TaskParameters taskParameters = requirements.getTaskParametersFromUser();
+
+            //Update target parameters
+            updateTaskParameters(taskParameters);
         }
 
         //Make a set of executable targets
-        Set<Target> executableTargets = makeExecutableTargetsSet(graph, graphSummary, fromScratch);
+        Set<Target> executableTargets = makeExecutableTargetsSet(fromScratch);
 
         //Starting task on graph
-        requirements.printStartOfTaskOnGraph(graph);
+        taskOutput.printStartOfTaskOnGraph(graph.getGraphName());
         graphSummary.startTheClock();
 
         Set<Target> cloneSet = new HashSet<>(), returnedSet;
@@ -124,8 +123,7 @@ public class SimulationTask extends Task{
                     throw new FileNotFound(filePath.getFileName().toString());
                 }
 
-                executeTaskOnTarget(currentTarget, graphSummary);
-                updateGraphSummary(graphSummary, currentTarget, taskParameters);
+                executeTaskOnTarget(currentTarget);
                 returnedSet = addNewTargetsToExecutableSet(currentTarget);
 
                 for(Target newExecutable : returnedSet)
@@ -166,22 +164,35 @@ public class SimulationTask extends Task{
         }
     }
 
-    public void updateGraphSummary(GraphSummary graphSummary, Target target, TaskParameters targetTaskParameters) {
-        Duration time = targetTaskParameters.getProcessingTime();
+    private void updateTaskParameters(TaskParameters taskParameters)
+    {
+        Target currentTarget;
+        String currentTargetName;
 
-        graphSummary.getTargetsSummaryMap().get(target.getTargetName()).setTime(time);
+        for(TargetSummary currentTargetSummary : graphSummary.getTargetsSummaryMap().values())
+        {
+            currentTargetName = currentTargetSummary.getTargetName();
+            currentTarget = graph.getGraphTargets().get(currentTargetName);
+
+            getTargetParameters().put(currentTarget, taskParameters);
+            graphSummary.getTargetsSummaryMap().get(currentTargetName).setTime(taskParameters.getProcessingTime());
+        }
     }
 
     @Override
-    public Set<Target> makeExecutableTargetsSet(Graph graph, GraphSummary graphSummary, Boolean fromScratch)
+    public Set<Target> makeExecutableTargetsSet(Boolean fromScratch)
     {
         Set<Target> set = new HashSet<>();
+        TargetSummary currentTargetSummary;
 
         for(Target currentTarget : graph.getGraphTargets().values())
         {
+            currentTargetSummary = graphSummary.getTargetsSummaryMap().get(currentTarget.getTargetName());
+
             if(fromScratch)
             {
                 Target.TargetProperty prop = currentTarget.getTargetProperty();
+
                 if(prop.equals(Target.TargetProperty.INDEPENDENT)
                         || prop.equals(Target.TargetProperty.LEAF))
                 {
@@ -190,11 +201,11 @@ public class SimulationTask extends Task{
             }
             else
             {
-                if(currentTarget.getResultStatus().equals(Target.ResultStatus.Failure)
+                if(currentTargetSummary.getResultStatus().equals(TargetSummary.ResultStatus.Failure)
                 && !graphSummary.getTargetsSummaryMap().get(currentTarget.getTargetName()).isSkipped())
                 {
-                    currentTarget.setRuntimeStatus(Target.RuntimeStatus.Waiting);
-                    currentTarget.setAllRequiredForTargetsToChosenStatus(Target.RuntimeStatus.Frozen, Target.ResultStatus.Failure);
+                    currentTargetSummary.setRuntimeStatus(TargetSummary.RuntimeStatus.Waiting);
+                    currentTargetSummary.
                     set.add(currentTarget);
                 }
             }

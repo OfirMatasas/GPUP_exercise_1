@@ -1,5 +1,6 @@
 package task;
 
+import target.Graph;
 import target.Target;
 import userInterface.GraphSummary;
 import userInterface.TargetSummary;
@@ -13,6 +14,7 @@ import java.time.Duration;
 import java.util.Date;
 import java.util.Map;
 import myExceptions.*;
+import userInterface.UserInteractions;
 
 public class TaskOutput
 {
@@ -91,16 +93,16 @@ public class TaskOutput
             time.toHours(), time.toMinutes(), time.getSeconds());
             os.write(timeSpentFormatted.getBytes(StandardCharsets.UTF_8));
 
-            Map<Target.ResultStatus, Integer> results = graphSummary.getAllResultStatus();
+            Map<TargetSummary.ResultStatus, Integer> results = graphSummary.getAllResultStatus();
             String succeeded, warnings, failed, frozen;
 
-            succeeded = "Number of targets succeeded: " + results.get(Target.ResultStatus.Success) + "\n";
+            succeeded = "Number of targets succeeded: " + results.get(TargetSummary.ResultStatus.Success) + "\n";
             os.write(succeeded.getBytes(StandardCharsets.UTF_8));
 
-            warnings = "Number of targets succeeded with warnings: " + results.get(Target.ResultStatus.Warning) + "\n";
+            warnings = "Number of targets succeeded with warnings: " + results.get(TargetSummary.ResultStatus.Warning) + "\n";
             os.write(warnings.getBytes(StandardCharsets.UTF_8));
 
-            failed = "Number of targets failed: " + results.get(Target.ResultStatus.Failure) + "\n";
+            failed = "Number of targets failed: " + results.get(TargetSummary.ResultStatus.Failure) + "\n";
             os.write(failed.getBytes(StandardCharsets.UTF_8));
 
             for(TargetSummary currentTarget : graphSummary.getTargetsSummaryMap().values())
@@ -151,5 +153,9 @@ public class TaskOutput
         } catch (IOException e) {
             throw new OpeningFileCrash(directoryPath);
         }
+    }
+
+    public void printStartOfTaskOnGraph(String graphName) {
+        System.out.println("Task started on graph " + graphName + "!");
     }
 }

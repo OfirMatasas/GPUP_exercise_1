@@ -82,7 +82,8 @@ public class UserInteractions implements OutputInterface, InputInterface
         }
     }
 
-    private void checkIfTargetContainedInACircle() throws NoGraphExisted, EmptyGraph {//remember try and catch, remember to check if target is in the graph first!
+    private void checkIfTargetContainedInACircle() throws NoGraphExisted, EmptyGraph
+    {
         try {
             if (graph.isEmpty()) {
                 throw new EmptyGraph();
@@ -113,7 +114,8 @@ public class UserInteractions implements OutputInterface, InputInterface
             if (graph.isEmpty())
                 throw new EmptyGraph();
 
-            if (graphSummary.getFirstRun()) {
+            if (graphSummary.getFirstRun())
+            { //Making a brand-new graph summary for first run
                 graphSummary = new GraphSummary(graph);
                 return true;
             }
@@ -130,7 +132,6 @@ public class UserInteractions implements OutputInterface, InputInterface
         } catch (NullPointerException ex) {
             throw new NoGraphExisted();
         }
-
     }
 
     @Override
@@ -208,7 +209,6 @@ public class UserInteractions implements OutputInterface, InputInterface
         } catch (NullPointerException ex) {
             throw new NoGraphExisted();
         }
-
     }
 
     @Override
