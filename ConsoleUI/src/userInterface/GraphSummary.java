@@ -68,10 +68,18 @@ public class GraphSummary implements Serializable {
         totalTime = Duration.between(timeStarted, timeEnded);
     }
 
+    public void setRunningTargets(Target currentTarget, Boolean runningOrNot)
+    {
+        targetsSummaryMap.get(currentTarget.getTargetName()).setRunning(runningOrNot);
+
+        for(Target requiredForTarget : currentTarget.getRequiredForTargets())
+            setRunningTargets(requiredForTarget, runningOrNot);
+    }
+
     public void calculateResults()
     {
         allResultStatus = new HashMap<>();
-        Integer succeeded=0, failed=0, warning=0;
+        Integer succeeded = 0, failed = 0, warning = 0;
 
         for(TargetSummary current : targetsSummaryMap.values())
         {
@@ -102,7 +110,7 @@ public class GraphSummary implements Serializable {
 
     public void setAllRequiredForTargetsOnSkipped(Target lastSkippedTarget, TargetSummary failedTargetSummary)
     {
-        for(Target newSkippedTarget : lastSkippedTarget.getRequireForTargets())
+        for(Target newSkippedTarget : lastSkippedTarget.getRequiredForTargets())
         {
             targetsSummaryMap.get(newSkippedTarget.getTargetName()).setSkipped(true);
 

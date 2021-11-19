@@ -45,9 +45,20 @@ public abstract class Task {
     }
 
     abstract public void executeTaskOnTarget(Target target);
-
-    abstract public void executeTask(Graph graph, Boolean fromScratch, GraphSummary graphSummary, Path xmlFilePath) throws OpeningFileCrash, FileNotFound;
+    abstract public void executeTask(Graph graph, Boolean fromScratch, GraphSummary graphSummary, Path xmlFilePath) throws OpeningFileCrash, FileNotFound, NoFailedTargets;
     abstract public Set<Target> makeExecutableTargetsSet(Boolean fromScratch);
+
+    public void preparationsForTask()
+    {
+        TargetSummary currentTargetSummary;
+
+        for(Target currentTarget : graph.getGraphTargets().values())
+        {
+            currentTargetSummary = graphSummary.getTargetsSummaryMap().get(currentTarget.getTargetName());
+
+            currentTargetSummary.setRunning(false);
+        }
+    }
 
     public Set<Target> addNewTargetsToExecutableSet(Target lastTargetFinished)
     {
@@ -56,7 +67,7 @@ public abstract class Task {
         TargetSummary candidateTargetSummary, candidateDependsOnSummary;
 
         //Check every required-for-target of the last target tasked
-        for(Target candidateTarget : lastTargetFinished.getRequireForTargets())
+        for(Target candidateTarget : lastTargetFinished.getRequiredForTargets())
         {
             addable = true;
             candidateTargetSummary = graphSummary.getTargetsSummaryMap().get(candidateTarget.getTargetName());
@@ -74,7 +85,10 @@ public abstract class Task {
             }
             //The candidate is not skipped and all the targets it depends on are succeeded
             if(addable)
+            {
                 returnedSet.add(candidateTarget);
+                candidateTargetSummary.setSkipped(false);
+            }
         }
         return returnedSet;
     }

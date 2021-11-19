@@ -54,7 +54,7 @@ public class Graph implements Serializable {
 
         for(Target currentTarget : graphTargets.values())
         {
-            if(currentTarget.getDependsOnTargets().size() == 0 && currentTarget.getRequireForTargets().size() == 0)
+            if(currentTarget.getDependsOnTargets().size() == 0 && currentTarget.getRequiredForTargets().size() == 0)
             {//Independent
                 currentTargetProperty = Target.TargetProperty.INDEPENDENT;
             }
@@ -62,7 +62,7 @@ public class Graph implements Serializable {
             {//Leaf
                 currentTargetProperty = Target.TargetProperty.LEAF;
             }
-            else if(currentTarget.getRequireForTargets().size() == 0)
+            else if(currentTarget.getRequiredForTargets().size() == 0)
             {//Root
                 currentTargetProperty = Target.TargetProperty.ROOT  ;
             }

@@ -2,6 +2,7 @@ package task;
 
 import myExceptions.EmptyGraph;
 import myExceptions.FileNotFound;
+import myExceptions.NoFailedTargets;
 import myExceptions.OpeningFileCrash;
 import target.Graph;
 import target.Target;
@@ -38,12 +39,10 @@ public class SimulationTask extends Task{
             if(result <= getTargetParameters().get(target).getSuccessWithWarnings())
             {
                 targetSummary.setResultStatus(TargetSummary.ResultStatus.Warning);
-//                graphSummary.getTargetsSummaryMap().get(TargetName).setResultStatus(TargetSummary.ResultStatus.Warning);
             }
             else
             {
                 targetSummary.setResultStatus(TargetSummary.ResultStatus.Success);
-//                graphSummary.getTargetsSummaryMap().get(TargetName).setResultStatus(TargetSummary.ResultStatus.Success);
             }
         }
         else //Task failed
@@ -54,11 +53,10 @@ public class SimulationTask extends Task{
             if(!targetSummary.checkIfFailedBefore())
                 graphSummary.setAllRequiredForTargetsOnSkipped(target, targetSummary);
 
-//            TargetSummary currentTargetSummary = graphSummary.getTargetsSummaryMap().get(target.getTargetName());
-//            currentTargetSummary.setSkippedTargets(graphSummary.setAllRequiredForTargetsOnSkipped(target));
         }
 
         targetSummary.setRuntimeStatus(TargetSummary.RuntimeStatus.Finished);
+        targetSummary.checkForOpenTargets(target, graphSummary);
 
         //Going to sleep
         try {
@@ -70,11 +68,12 @@ public class SimulationTask extends Task{
         graphSummary.getTargetsSummaryMap().get(TargetName).stopTheClock();
     }
 
-    public void executeTask(Graph graph, Boolean fromScratch, GraphSummary graphSummary, Path xmlFilePath) throws OpeningFileCrash, FileNotFound {
+    public void executeTask(Graph graph, Boolean fromScratch, GraphSummary graphSummary, Path xmlFilePath) throws OpeningFileCrash, FileNotFound, NoFailedTargets {
         Path directoryPath = taskOutput.createNewDirectoryOfTaskLogs("Simulation Task", xmlFilePath);
         Path filePath;
         this.graph = graph;
         this.graphSummary = graphSummary;
+        preparationsForTask();
 
         //Check if there are any task parameters saved from last execution
         if(targetsParameters == null || !requirements.reuseTaskParameters())
@@ -87,6 +86,8 @@ public class SimulationTask extends Task{
 
         //Make a set of executable targets
         Set<Target> executableTargets = makeExecutableTargetsSet(fromScratch);
+        if (executableTargets.isEmpty())
+            throw new NoFailedTargets();
 
         //Starting task on graph
         taskOutput.printStartOfTaskOnGraph(graph.getGraphName());
@@ -96,9 +97,7 @@ public class SimulationTask extends Task{
         while(executableTargets.size() != 0)
         {
             //Copying the executable targets to a clone set
-            for(Target currTarget : executableTargets)
-                cloneSet.add(currTarget);
-
+            cloneSet.addAll(executableTargets);
             executableTargets.clear();
 
             for(Target currentTarget : cloneSet)
@@ -194,7 +193,10 @@ public class SimulationTask extends Task{
                 Target.TargetProperty prop = currentTarget.getTargetProperty();
 
                 if(prop.equals(Target.TargetProperty.INDEPENDENT) || prop.equals(Target.TargetProperty.LEAF))
+                {
                     executableTargets.add(currentTarget);
+                    graphSummary.setRunningTargets(currentTarget, true);
+                }
             }
             else
             { //Starting from last stop
@@ -205,6 +207,7 @@ public class SimulationTask extends Task{
 
                     currentTargetSummary.setAllRequiredForTargetsRuntimeStatus(currentTarget, graphSummary, TargetSummary.RuntimeStatus.Frozen);
                     executableTargets.add(currentTarget);
+                    graphSummary.setRunningTargets(currentTarget, true);
                 }
             }
         }

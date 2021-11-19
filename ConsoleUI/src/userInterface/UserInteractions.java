@@ -2,7 +2,9 @@ package userInterface;
 
 import graphAnalyzers.PathFinder;
 import myExceptions.EmptyGraph;
+import myExceptions.NoFailedTargets;
 import myExceptions.NoGraphExisted;
+import org.omg.PortableInterceptor.SUCCESSFUL;
 import target.Graph;
 import target.Target;
 import graphAnalyzers.CircleFinder;
@@ -112,7 +114,7 @@ public class UserInteractions implements OutputInterface, InputInterface
         }
     }
 
-    public Boolean askForIncremental() throws EmptyGraph, NoGraphExisted {
+    public Boolean askForIncremental() throws EmptyGraph, NoGraphExisted{
         try {
             if (graph.isEmpty())
                 throw new EmptyGraph();
@@ -226,11 +228,11 @@ public class UserInteractions implements OutputInterface, InputInterface
 
     @Override
     public void printRequiredForTargets(Target target) {
-        if (target.getRequireForTargets().size() == 0)
+        if (target.getRequiredForTargets().size() == 0)
             System.out.println("The target has no required-for-targets.");
         else {
             System.out.println("List of required-for-targets: ");
-            for (Target currentTarget : target.getRequireForTargets())
+            for (Target currentTarget : target.getRequiredForTargets())
                 System.out.print(currentTarget.getTargetName() + " ");
             System.out.println();
         }

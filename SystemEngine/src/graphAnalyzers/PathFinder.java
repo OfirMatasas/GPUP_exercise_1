@@ -46,7 +46,7 @@ public class PathFinder {
         else if (connection.equals(Target.Connection.DEPENDS_ON))
             nextTargetsOnCurrentPath = source.getDependsOnTargets();
         else // (connection.equals(Target.Connection.REQUIRED_FOR))
-            nextTargetsOnCurrentPath = source.getRequireForTargets();
+            nextTargetsOnCurrentPath = source.getRequiredForTargets();
 
         if(nextTargetsOnCurrentPath.size() == 0)
             return currentPath;

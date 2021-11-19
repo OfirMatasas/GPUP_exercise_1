@@ -51,7 +51,6 @@ public class TaskOutput
         try
         {
             Duration time = targetSummary.getTime();
-
             String targetName, totalTimeFormatted, result;
 
             targetName = "Task on target " + targetSummary.getTargetName() + " ended.\n";
@@ -64,6 +63,19 @@ public class TaskOutput
             result = "The result: " + targetSummary.getResultStatus().toString() + ".\n";
             os.write(result.getBytes(StandardCharsets.UTF_8));
 
+            //Output the new opened targets (might be executable) after current execution
+            if(!targetSummary.getOpenedTargets().isEmpty())
+            {
+                os.write("Targets that have been opened for execution: ".getBytes(StandardCharsets.UTF_8));
+                for(String openedTargetName : targetSummary.getOpenedTargets())
+                {
+                    String openedTargetNameSpaced = openedTargetName + " ";
+                    os.write(openedTargetNameSpaced.getBytes(StandardCharsets.UTF_8));
+                }
+                os.write(("\n").getBytes(StandardCharsets.UTF_8));
+            }
+
+            //Output the new skipped targets after current execution
             if(!targetSummary.isSkipped() && targetSummary.getResultStatus().equals(TargetSummary.ResultStatus.Failure))
             {
                 os.write("Targets that have been skipped: ".getBytes(StandardCharsets.UTF_8));
@@ -106,7 +118,10 @@ public class TaskOutput
             os.write(failed.getBytes(StandardCharsets.UTF_8));
 
             for(TargetSummary currentTarget : graphSummary.getTargetsSummaryMap().values())
-                outputTargetTaskSummary(os, currentTarget);
+            {
+                if(currentTarget.isRunning())
+                    outputTargetTaskSummary(os, currentTarget);
+            }
             os.write("----------------------------------\n".getBytes(StandardCharsets.UTF_8));
         }
         catch (Exception e) {

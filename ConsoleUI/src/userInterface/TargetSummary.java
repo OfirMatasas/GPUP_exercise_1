@@ -16,13 +16,14 @@ public class TargetSummary implements Serializable
     static public enum ResultStatus { Success, Warning, Failure }
 
     private Duration actualTime, predictedTime;
-    private String targetName;
-    private String extraInformation;
+    private final String targetName;
+    private final String extraInformation;
     private ResultStatus resultStatus;
     private RuntimeStatus runtimeStatus;
-    private boolean isSkipped;
+    private boolean isSkipped, running;
     private Instant timeStarted;
     private Set<String> skippedTargets;
+    private final Set<String> openedTargets;
 
     public TargetSummary(String targetName) {
         this.targetName = targetName;
@@ -32,14 +33,16 @@ public class TargetSummary implements Serializable
         this.resultStatus = ResultStatus.Failure;
         this.runtimeStatus = RuntimeStatus.Frozen;
         this.isSkipped = false;
+        this.openedTargets = new HashSet<>();
     }
 
-//    public TargetSummary(Duration time, String targetName, String extraInformation, ResultStatus resultStatus) {
-//        this.time = time;
-//        this.targetName = targetName;
-//        this.extraInformation = extraInformation;
-//        this.resultStatus = resultStatus;
-//    }
+    public boolean isRunning() {
+        return running;
+    }
+
+    public void setRunning(boolean running) {
+        this.running = running;
+    }
 
     public Set<String> getSkippedTargets() {
         return skippedTargets;
@@ -104,16 +107,8 @@ public class TargetSummary implements Serializable
         return targetName;
     }
 
-    public void setTargetName(String targetName) {
-        this.targetName = targetName;
-    }
-
     public String getExtraInformation() {
         return extraInformation;
-    }
-
-    public void setExtraInformation(String extraInformation) {
-        this.extraInformation = extraInformation;
     }
 
     public ResultStatus getResultStatus() {
@@ -128,13 +123,48 @@ public class TargetSummary implements Serializable
         return this.isSkipped;
     }
 
+    public void checkForOpenTargets(Target executedTarget, GraphSummary graphSummary)
+    {
+        TargetSummary dependsOnTargetSummary;
+        Boolean skip;
+
+        for(Target requiredForTarget : executedTarget.getRequiredForTargets())
+        {
+            skip = false;
+            for(Target dependsOnTarget : requiredForTarget.getDependsOnTargets())
+            {
+                dependsOnTargetSummary = graphSummary.getTargetsSummaryMap().get(dependsOnTarget.getTargetName());
+
+                if(!dependsOnTargetSummary.getRuntimeStatus().equals(RuntimeStatus.Finished))
+                {
+                    skip = true;
+                    break;
+                }
+            }
+
+            if(skip)
+                continue;
+
+            openedTargets.add(requiredForTarget.getTargetName());
+        }
+    }
+
     public void setAllRequiredForTargetsRuntimeStatus(Target target, GraphSummary graphSummary, RuntimeStatus runtimeStatus)
     {
-        for(Target requiredForTarget : target.getRequireForTargets())
+        for(Target requiredForTarget : target.getRequiredForTargets())
         {
             graphSummary.getTargetsSummaryMap().get(requiredForTarget.getTargetName()).setRuntimeStatus(runtimeStatus);
             setAllRequiredForTargetsRuntimeStatus(requiredForTarget, graphSummary, runtimeStatus);
         }
+    }
+
+    public void removeAllOpenedTargets()
+    {
+        openedTargets.clear();
+    }
+
+    public Set<String> getOpenedTargets() {
+        return openedTargets;
     }
 
     @Override

@@ -11,7 +11,7 @@ public class Target implements Serializable {
     static public enum Connection { REQUIRED_FOR, DEPENDS_ON }
 
     private Set<Target> dependsOnTargets;
-    private Set<Target> requireForTargets;
+    private Set<Target> requiredForTargets;
     private TargetProperty targetProperty;
     private String targetName;
     private String extraInformation;
@@ -34,7 +34,7 @@ public class Target implements Serializable {
 
     public Target() {
         this.dependsOnTargets = new HashSet<>();
-        this.requireForTargets = new HashSet<>();
+        this.requiredForTargets = new HashSet<>();
         this.targetProperty = TargetProperty.INDEPENDENT;
     }
 
@@ -46,8 +46,8 @@ public class Target implements Serializable {
         this.dependsOnTargets = dependsOnTargets;
     }
 
-    public Set<Target> getRequireForTargets() {
-        return requireForTargets;
+    public Set<Target> getRequiredForTargets() {
+        return requiredForTargets;
     }
 
     @Override
@@ -64,7 +64,7 @@ public class Target implements Serializable {
     }
 
     public void setRequireForTargets(Set<Target> requireForTargets) {
-        this.requireForTargets = requireForTargets;
+        this.requiredForTargets = requireForTargets;
     }
 
     public TargetProperty getTargetProperty() {
@@ -77,5 +77,5 @@ public class Target implements Serializable {
 
     public void addToDependsOn(Target dependsOn) { dependsOnTargets.add(dependsOn); }
 
-    public void addToRequiredFor(Target requiredFor) { requireForTargets.add(requiredFor); }
+    public void addToRequiredFor(Target requiredFor) { requiredForTargets.add(requiredFor); }
 }

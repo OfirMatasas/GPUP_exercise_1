@@ -87,7 +87,7 @@ public class ResourceChecker{
         }
         else // dep.getType().equals(DependencyType.DependsOn)
         {
-            if(target2.getRequireForTargets().contains(target1)) {
+            if(target2.getRequiredForTargets().contains(target1)) {
                 return false;
             }
             else
