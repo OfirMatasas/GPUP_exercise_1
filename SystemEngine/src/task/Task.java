@@ -20,8 +20,6 @@ import java.util.*;
 
 public abstract class Task {
     protected Map<Target, TaskParameters> targetsParameters;
-    private Instant timeStarted;
-    private Duration totalTimeSpentOnTask;
     protected Random rand;
     protected TaskOutput taskOutput;
     protected Graph graph;
@@ -44,22 +42,6 @@ public abstract class Task {
 
     public Map<Target, TaskParameters> getTargetsParameters() {
         return targetsParameters;
-    }
-
-    public void startTheClock()
-    {
-        timeStarted = Instant.now();
-    }
-
-    public void stopTheClock()
-    {
-        Instant timeEnded = Instant.now();
-        totalTimeSpentOnTask = Duration.between(timeStarted, timeEnded);
-    }
-
-    public Duration getTotalTimeSpentOnTask()
-    {
-        return totalTimeSpentOnTask;
     }
 
     abstract public void executeTaskOnTarget(Target target);

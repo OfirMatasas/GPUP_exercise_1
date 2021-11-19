@@ -6,6 +6,7 @@ import target.Target;
 import java.io.Serializable;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
@@ -14,29 +15,38 @@ public class TargetSummary implements Serializable
     static public enum RuntimeStatus { Frozen, Skipped, Waiting, InProcess, Finished }
     static public enum ResultStatus { Success, Warning, Failure }
 
-    private Duration time;
+    private Duration actualTime, predictedTime;
     private String targetName;
     private String extraInformation;
     private ResultStatus resultStatus;
     private RuntimeStatus runtimeStatus;
     private boolean isSkipped;
     private Instant timeStarted;
-//    private Set<String> skippedTargets;
+    private Set<String> skippedTargets;
 
     public TargetSummary(String targetName) {
         this.targetName = targetName;
-        this.time = Duration.ZERO;
+        this.actualTime = Duration.ZERO;
+        this.predictedTime = Duration.ZERO;
         this.extraInformation = null;
         this.resultStatus = ResultStatus.Failure;
         this.runtimeStatus = RuntimeStatus.Frozen;
         this.isSkipped = false;
     }
 
-    public TargetSummary(Duration time, String targetName, String extraInformation, ResultStatus resultStatus) {
-        this.time = time;
-        this.targetName = targetName;
-        this.extraInformation = extraInformation;
-        this.resultStatus = resultStatus;
+//    public TargetSummary(Duration time, String targetName, String extraInformation, ResultStatus resultStatus) {
+//        this.time = time;
+//        this.targetName = targetName;
+//        this.extraInformation = extraInformation;
+//        this.resultStatus = resultStatus;
+//    }
+
+    public Set<String> getSkippedTargets() {
+        return skippedTargets;
+    }
+
+    public Duration getPredictedTime() {
+        return predictedTime;
     }
 
     public void startTheClock()
@@ -47,7 +57,27 @@ public class TargetSummary implements Serializable
     public void stopTheClock()
     {
         Instant timeEnded = Instant.now();
-        time = Duration.between(timeStarted, timeEnded);
+        actualTime = Duration.between(timeStarted, timeEnded);
+    }
+
+    public void setPredictedTime(Duration predictedTime) {
+        this.predictedTime = predictedTime;
+    }
+
+    public Boolean checkIfFailedBefore()
+    {
+        if(skippedTargets == null)
+        {
+            skippedTargets = new HashSet<>();
+            return false;
+        }
+
+        return true;
+    }
+
+    public void addNewSkippedTarget(String skippedTargetName)
+    {
+        skippedTargets.add(skippedTargetName);
     }
 
     public RuntimeStatus getRuntimeStatus() {
@@ -63,11 +93,11 @@ public class TargetSummary implements Serializable
     }
 
     public Duration getTime() {
-        return time;
+        return actualTime;
     }
 
     public void setTime(Duration time) {
-        this.time = time;
+        this.actualTime = time;
     }
 
     public String getTargetName() {
@@ -119,12 +149,4 @@ public class TargetSummary implements Serializable
     public int hashCode() {
         return Objects.hash(targetName);
     }
-
-//    public Set<String> getSkippedTargets() {
-//        return skippedTargets;
-//    }
-//
-//    public void setSkippedTargets(Set<String> skippedTargets) {
-//        this.skippedTargets = skippedTargets;
-//    }
 }

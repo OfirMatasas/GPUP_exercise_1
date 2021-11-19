@@ -29,42 +29,45 @@ public class SimulationTask extends Task{
         TargetSummary targetSummary = graphSummary.getTargetsSummaryMap().get(target.getTargetName());
         targetSummary.startTheClock();
         targetSummary.setRuntimeStatus(TargetSummary.RuntimeStatus.InProcess);
+        String TargetName = target.getTargetName();
 
         Double result = Math.random();
 
-        if(result < getTargetParameters().get(target).getSuccessRate())
+        if(result <= getTargetParameters().get(target).getSuccessRate()) //Task succeeded
         {
-            for(Target currentTarget : target.getRequireForTargets())
-                graphSummary.getTargetsSummaryMap().get(currentTarget.getTargetName()).setSkipped(false);
-
-            if(result < getTargetParameters().get(target).getSuccessWithWarnings())
+            if(result <= getTargetParameters().get(target).getSuccessWithWarnings())
             {
                 targetSummary.setResultStatus(TargetSummary.ResultStatus.Warning);
-                graphSummary.getTargetsSummaryMap().get(target.getTargetName()).setResultStatus(TargetSummary.ResultStatus.Warning);
+//                graphSummary.getTargetsSummaryMap().get(TargetName).setResultStatus(TargetSummary.ResultStatus.Warning);
             }
             else
             {
                 targetSummary.setResultStatus(TargetSummary.ResultStatus.Success);
-                graphSummary.getTargetsSummaryMap().get(target.getTargetName()).setResultStatus(TargetSummary.ResultStatus.Success);
+//                graphSummary.getTargetsSummaryMap().get(TargetName).setResultStatus(TargetSummary.ResultStatus.Success);
             }
         }
-        else //The task failed
+        else //Task failed
         {
-            targetSummary.setResultStatus(TargetSummary.ResultStatus.Failure);
-            graphSummary.setAllRequiredForAsSkipped(target);
+            targetSummary.setResultStatus(TargetSummary.ResultStatus.Failure); //Already defined as "Failure", just to be on the safe side
+
+            //If first time failed - making a new set of the targets became skipped
+            if(!targetSummary.checkIfFailedBefore())
+                graphSummary.setAllRequiredForTargetsOnSkipped(target, targetSummary);
+
 //            TargetSummary currentTargetSummary = graphSummary.getTargetsSummaryMap().get(target.getTargetName());
 //            currentTargetSummary.setSkippedTargets(graphSummary.setAllRequiredForTargetsOnSkipped(target));
         }
 
         targetSummary.setRuntimeStatus(TargetSummary.RuntimeStatus.Finished);
 
+        //Going to sleep
         try {
             Thread.sleep(getTargetsParameters().get(target).getProcessingTime().toMillis());
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
 
-        graphSummary.getTargetsSummaryMap().get(target.getTargetName()).stopTheClock();
+        graphSummary.getTargetsSummaryMap().get(TargetName).stopTheClock();
     }
 
     public void executeTask(Graph graph, Boolean fromScratch, GraphSummary graphSummary, Path xmlFilePath) throws OpeningFileCrash, FileNotFound {
@@ -107,6 +110,7 @@ public class SimulationTask extends Task{
                 } catch (IOException e) {
                     throw new OpeningFileCrash(filePath.getFileName().toString());
                 }
+
                 TargetSummary currentTargetSummary = graphSummary.getTargetsSummaryMap().get(currentTarget.getTargetName());
                 //Print start of task on current target to target's file and to console
                 try {
@@ -139,7 +143,7 @@ public class SimulationTask extends Task{
         }
 
         //Task stopped
-        filePath = Paths.get(directoryPath + "\\Graph Summary.log");
+        filePath = Paths.get(directoryPath + "\\" +  graph.getGraphName() + " Graph Summary.log");
         try {
             Files.createFile(filePath);
         } catch (IOException e) {
@@ -171,7 +175,7 @@ public class SimulationTask extends Task{
             currentTarget = graph.getGraphTargets().get(currentTargetName);
 
             getTargetParameters().put(currentTarget, taskParameters);
-            graphSummary.getTargetsSummaryMap().get(currentTargetName).setTime(taskParameters.getProcessingTime());
+            currentTargetSummary.setPredictedTime(taskParameters.getProcessingTime());
         }
     }
 

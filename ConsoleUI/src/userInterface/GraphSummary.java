@@ -15,19 +15,18 @@ import java.util.stream.Collectors;
 public class GraphSummary implements Serializable {
     private String graphName;
     private Duration totalTime;
-    private Instant timeStarted, timeEnded;
+    private Instant timeStarted;
     private Map<String, TargetSummary> targetsSummaryMap;
     private Map<TargetSummary.ResultStatus, Integer> allResultStatus;
     private Boolean firstRun;
-    private Graph graph;
 
-    public void setAllRequiredForAsSkipped(Target target)
-    {
-        for(Target skippedTarget : target.getRequireForTargets())
-        {
-            targetsSummaryMap.get(skippedTarget.getTargetName()).setSkipped(true);
-            setAllRequiredForAsSkipped(skippedTarget);
-        }
+    public GraphSummary(Graph graph) {
+        this.targetsSummaryMap = new HashMap<>();
+        this.firstRun = true;
+        this.graphName = graph.getGraphName();
+
+        for(Target currentTarget : graph.getGraphTargets().values())
+            this.targetsSummaryMap.put(currentTarget.getTargetName(), new TargetSummary(currentTarget.getTargetName()));
     }
 
     public Boolean getFirstRun() {
@@ -42,22 +41,8 @@ public class GraphSummary implements Serializable {
         return graphName;
     }
 
-    public void setGraphName(String graphName) {
-        this.graphName = graphName;
-    }
-
     public Map<TargetSummary.ResultStatus, Integer> getAllResultStatus() {
         return allResultStatus;
-    }
-
-    public GraphSummary(Graph graph) {
-        this.targetsSummaryMap = new HashMap<>();
-        this.firstRun = true;
-        this.graph = graph;
-        this.graphName = graph.getGraphName();
-
-        for(Target currentTarget : graph.getGraphTargets().values())
-            this.targetsSummaryMap.put(currentTarget.getTargetName(), new TargetSummary(currentTarget.getTargetName()));
     }
 
     public Duration getTime() {
@@ -79,7 +64,7 @@ public class GraphSummary implements Serializable {
 
     public void stopTheClock()
     {
-        timeEnded = Instant.now();
+        Instant timeEnded = Instant.now();
         totalTime = Duration.between(timeStarted, timeEnded);
     }
 
@@ -115,16 +100,14 @@ public class GraphSummary implements Serializable {
         allResultStatus.put(TargetSummary.ResultStatus.Warning, warning);
     }
 
-//    public Set<String> setAllRequiredForTargetsOnSkipped(Target failedTarget)
-//    {
-//        Set<String> skippedSet = new HashSet<>();
-//
-//        for(Target skippedTarget : failedTarget.getRequireForTargets())
-//        {
-//            targetsSummaryMap.get(skippedTarget.getTargetName()).setSkipped(true);
-//            skippedSet.add(skippedTarget.getTargetName());
-//            skippedSet.addAll(setAllRequiredForTargetsOnSkipped(skippedTarget));
-//        }
-//        return skippedSet;
-//    }
+    public void setAllRequiredForTargetsOnSkipped(Target lastSkippedTarget, TargetSummary failedTargetSummary)
+    {
+        for(Target newSkippedTarget : lastSkippedTarget.getRequireForTargets())
+        {
+            targetsSummaryMap.get(newSkippedTarget.getTargetName()).setSkipped(true);
+
+            failedTargetSummary.addNewSkippedTarget(newSkippedTarget.getTargetName());
+            setAllRequiredForTargetsOnSkipped(newSkippedTarget, failedTargetSummary);
+        }
+    }
 }

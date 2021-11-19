@@ -24,7 +24,7 @@ public class TaskOutput
     {
         try
         {
-            Duration time = targetSummary.getTime();
+            Duration time = targetSummary.getPredictedTime();
 
             String targetName, targetExtraInfo, totalTimeFormatted;
 
@@ -64,16 +64,16 @@ public class TaskOutput
             result = "The result: " + targetSummary.getResultStatus().toString() + ".\n";
             os.write(result.getBytes(StandardCharsets.UTF_8));
 
-//            if(!targetSummary.isSkipped() && targetSummary.getResultStatus().equals(Target.ResultStatus.Failure))
-//            {
-//                os.write("Targets that have been skipped: ".getBytes(StandardCharsets.UTF_8));
-//                for(String skippedTargetName : targetSummary.getSkippedTargets())
-//                {
-//                    String skippedTargetNameSpaced = skippedTargetName + " ";
-//                    os.write(skippedTargetNameSpaced.getBytes(StandardCharsets.UTF_8));
-//                }
-//                os.write(("\n").getBytes(StandardCharsets.UTF_8));
-//            }
+            if(!targetSummary.isSkipped() && targetSummary.getResultStatus().equals(TargetSummary.ResultStatus.Failure))
+            {
+                os.write("Targets that have been skipped: ".getBytes(StandardCharsets.UTF_8));
+                for(String skippedTargetName : targetSummary.getSkippedTargets())
+                {
+                    String skippedTargetNameSpaced = skippedTargetName + " ";
+                    os.write(skippedTargetNameSpaced.getBytes(StandardCharsets.UTF_8));
+                }
+                os.write(("\n").getBytes(StandardCharsets.UTF_8));
+            }
 
             os.write("------------------------------------------\n".getBytes(StandardCharsets.UTF_8));
         }
