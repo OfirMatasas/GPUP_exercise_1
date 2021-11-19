@@ -139,8 +139,8 @@ public class TaskOutput
         }
     }
 
-    public Path createNewDirectoryOfTaskLogs(String taskName) throws OpeningFileCrash {
-        directoryPath = "C:\\Users\\matas\\Desktop\\GPUP outputs";
+    public Path createNewDirectoryOfTaskLogs(String taskName, Path xmlFilePath) throws OpeningFileCrash {
+        directoryPath = xmlFilePath.getParent().toString();
         SimpleDateFormat formatter = new SimpleDateFormat("dd.MM.yyyy HH.mm.ss");
         Date date = new Date();
 

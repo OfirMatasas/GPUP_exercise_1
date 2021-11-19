@@ -6,6 +6,7 @@ import resources.generated.GPUPDescriptor;
 import target.Graph;
 import target.Target;
 import userInterface.GraphSummary;
+import userInterface.TargetSummary;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -19,7 +20,7 @@ import java.util.*;
 
 public abstract class Task {
     protected Map<Target, TaskParameters> targetsParameters;
-    private Instant timeStarted, timeEnded;
+    private Instant timeStarted;
     private Duration totalTimeSpentOnTask;
     protected Random rand;
     protected TaskOutput taskOutput;
@@ -27,7 +28,6 @@ public abstract class Task {
     protected GraphSummary graphSummary;
 
     public Task() {
-        this.targetsParameters = new HashMap<>();
         this.rand = new Random();
         this.taskOutput = new TaskOutput();
     }
@@ -35,6 +35,11 @@ public abstract class Task {
     public Map<Target, TaskParameters> getTargetParameters()
     {
         return this.targetsParameters;
+    }
+
+    public void makeNewTargetParameters()
+    {
+        this.targetsParameters = new HashMap<>();
     }
 
     public Map<Target, TaskParameters> getTargetsParameters() {
@@ -48,7 +53,7 @@ public abstract class Task {
 
     public void stopTheClock()
     {
-        timeEnded = Instant.now();
+        Instant timeEnded = Instant.now();
         totalTimeSpentOnTask = Duration.between(timeStarted, timeEnded);
     }
 
@@ -57,38 +62,35 @@ public abstract class Task {
         return totalTimeSpentOnTask;
     }
 
-    public void clearTaskHistory(Graph graph)
-    {
-        graph.setAllTargetRuntimeStatusToDefault();
-        graph.setAllTargetWasVisitedToDefault();
-        graph.setAllTargetResultStatusToDefault();
-    }
-
     abstract public void executeTaskOnTarget(Target target);
 
-    abstract public void executeTask(Graph graph, Boolean fromScratch, GraphSummary graphSummary) throws OpeningFileCrash, FileNotFound;
+    abstract public void executeTask(Graph graph, Boolean fromScratch, GraphSummary graphSummary, Path xmlFilePath) throws OpeningFileCrash, FileNotFound;
     abstract public Set<Target> makeExecutableTargetsSet(Boolean fromScratch);
 
     public Set<Target> addNewTargetsToExecutableSet(Target lastTargetFinished)
     {
         Set<Target> returnedSet = new HashSet<>();
         Boolean addable = true;
+        TargetSummary candidateTargetSummary, candidateDependsOnSummary;
 
         //Check every required-for-target of the last target tasked
         for(Target candidateTarget : lastTargetFinished.getRequireForTargets())
         {
             addable = true;
+            candidateTargetSummary = graphSummary.getTargetsSummaryMap().get(candidateTarget.getTargetName());
+
             //If the current candidate is already skipped - break
-            if(candidateTarget.getRuntimeStatus().equals(Target.RuntimeStatus.Skipped))
+            if(candidateTargetSummary.getRuntimeStatus().equals(TargetSummary.RuntimeStatus.Skipped))
                 break;
             //Check every target the candidate depends on
             for(Target candidateDependsOn : candidateTarget.getDependsOnTargets())
             {
+                candidateDependsOnSummary = graphSummary.getTargetsSummaryMap().get(candidateDependsOn.getTargetName());
                 //If the candidate's depends-on-target is not succeeded (even with warning) - break
-                if(candidateDependsOn.getResultStatus().equals(Target.ResultStatus.Failure))
+                if(candidateDependsOnSummary.getResultStatus().equals(TargetSummary.ResultStatus.Failure))
                     addable = false;
             }
-            //The candidate is not skipped and all of the targets it depends on are succeeded
+            //The candidate is not skipped and all the targets it depends on are succeeded
             if(addable)
                 returnedSet.add(candidateTarget);
         }

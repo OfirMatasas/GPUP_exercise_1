@@ -14,7 +14,7 @@ public class TaskRequirements {
     public Boolean reuseTaskParameters()
     {
         System.out.println("There are existing parameters for this task.");
-        System.out.println("Would you like to re-use them?");
+        System.out.println("Would you like to re-use them (y/n)?");
         return UserInteractions.yesOrNo();
     }
 
@@ -25,7 +25,6 @@ public class TaskRequirements {
         Boolean isRandom = true;
         Double successRate = -1.0, successWithWarnings = -1.0;
         TaskParameters taskParameters = new TaskParameters();
-
 
         System.out.print("Enter the processing time (in m/s) for each task: ");
         while(true)

@@ -46,55 +46,6 @@ public class Graph implements Serializable {
         calculateProperties();
     }
 
-    public Boolean prechecksForTargetsConnection(String src, String dest)
-    {
-        Target source ,destination;
-        source= graphTargets.get(src);
-        destination= graphTargets.get(dest);
-
-        if (source.getTargetProperty().equals(destination.getTargetProperty()))
-        {
-            if(source.getTargetProperty()== Target.TargetProperty.ROOT||source.getTargetProperty() == Target.TargetProperty.LEAF)
-                return  false;
-        }
-        else if(source.getTargetProperty().equals(Target.TargetProperty.INDEPENDENT)||destination.getTargetProperty().equals(Target.TargetProperty.INDEPENDENT))
-            return  false;
-
-        return  true;
-    }
-
-    public ArrayList<String> getPathsFromTargets(Target source, Target dest, Target.Connection connection)
-    {
-        ArrayList<String> currentPath = new ArrayList<>();
-        ArrayList<String> returnedPaths;
-        Set<Target> nextTargetsOnCurrentPath;
-
-        if(source.equals(dest))
-        {
-            currentPath.add(source.getTargetName());
-            return currentPath;
-        }
-        else if(source.getWasVisited().equals(true))
-            return currentPath;
-        else if (connection.equals(Target.Connection.DEPENDS_ON))
-            nextTargetsOnCurrentPath = source.getDependsOnTargets();
-        else // (connection.equals(Target.Connection.REQUIRED_FOR))
-            nextTargetsOnCurrentPath = source.getRequireForTargets();
-
-        if(nextTargetsOnCurrentPath.size() == 0)
-            return currentPath;
-
-        for(Target currentTarget : nextTargetsOnCurrentPath)
-        {
-            returnedPaths = getPathsFromTargets(currentTarget, dest, connection);
-
-            for(String path : returnedPaths)
-                currentPath.add(source.getTargetName() + " -> " + path);
-        }
-
-        return currentPath;
-    }
-
     public void calculateProperties()
     {
         clearTargetsByProperties();
@@ -131,24 +82,6 @@ public class Graph implements Serializable {
         targetsByProperties.get(Target.TargetProperty.MIDDLE).clear();
         targetsByProperties.get(Target.TargetProperty.LEAF).clear();
         targetsByProperties.get(Target.TargetProperty.INDEPENDENT).clear();
-    }
-
-    public void setAllTargetResultStatusToDefault()
-    {
-        for(Target currentTarget : graphTargets.values())
-            currentTarget.setResultStatus(Target.ResultStatus.Failure);
-    }
-
-    public void setAllTargetRuntimeStatusToDefault()
-    {
-        for(Target currentTarget : graphTargets.values())
-            currentTarget.setRuntimeStatus(Target.RuntimeStatus.Waiting);
-    }
-
-    public void setAllTargetWasVisitedToDefault()
-    {
-        for(Target currentTarget : graphTargets.values())
-            currentTarget.setWasVisited(false);
     }
 
 //    public Map<Target.ResultStatus, Integer> calculateResults()

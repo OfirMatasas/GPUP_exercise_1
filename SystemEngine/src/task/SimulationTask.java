@@ -24,11 +24,6 @@ public class SimulationTask extends Task{
 
     TaskRequirements requirements = new TaskRequirements();
 
-    @Override
-    public void clearTaskHistory(Graph graph) {
-        super.clearTaskHistory(graph);
-    }
-
     public void executeTaskOnTarget(Target target)
     {
         TargetSummary targetSummary = graphSummary.getTargetsSummaryMap().get(target.getTargetName());
@@ -72,8 +67,8 @@ public class SimulationTask extends Task{
         graphSummary.getTargetsSummaryMap().get(target.getTargetName()).stopTheClock();
     }
 
-    public void executeTask(Graph graph, Boolean fromScratch, GraphSummary graphSummary) throws OpeningFileCrash, FileNotFound {
-        Path directoryPath = taskOutput.createNewDirectoryOfTaskLogs("Simulation Task");
+    public void executeTask(Graph graph, Boolean fromScratch, GraphSummary graphSummary, Path xmlFilePath) throws OpeningFileCrash, FileNotFound {
+        Path directoryPath = taskOutput.createNewDirectoryOfTaskLogs("Simulation Task", xmlFilePath);
         Path filePath;
         this.graph = graph;
         this.graphSummary = graphSummary;
@@ -168,6 +163,7 @@ public class SimulationTask extends Task{
     {
         Target currentTarget;
         String currentTargetName;
+        makeNewTargetParameters();
 
         for(TargetSummary currentTargetSummary : graphSummary.getTargetsSummaryMap().values())
         {
@@ -182,7 +178,7 @@ public class SimulationTask extends Task{
     @Override
     public Set<Target> makeExecutableTargetsSet(Boolean fromScratch)
     {
-        Set<Target> set = new HashSet<>();
+        Set<Target> executableTargets = new HashSet<>();
         TargetSummary currentTargetSummary;
 
         for(Target currentTarget : graph.getGraphTargets().values())
@@ -193,24 +189,22 @@ public class SimulationTask extends Task{
             {
                 Target.TargetProperty prop = currentTarget.getTargetProperty();
 
-                if(prop.equals(Target.TargetProperty.INDEPENDENT)
-                        || prop.equals(Target.TargetProperty.LEAF))
-                {
-                    set.add(currentTarget);
-                }
+                if(prop.equals(Target.TargetProperty.INDEPENDENT) || prop.equals(Target.TargetProperty.LEAF))
+                    executableTargets.add(currentTarget);
             }
             else
-            {
+            { //Starting from last stop
                 if(currentTargetSummary.getResultStatus().equals(TargetSummary.ResultStatus.Failure)
                 && !graphSummary.getTargetsSummaryMap().get(currentTarget.getTargetName()).isSkipped())
                 {
                     currentTargetSummary.setRuntimeStatus(TargetSummary.RuntimeStatus.Waiting);
-                    currentTargetSummary.
-                    set.add(currentTarget);
+
+                    currentTargetSummary.setAllRequiredForTargetsRuntimeStatus(currentTarget, graphSummary, TargetSummary.RuntimeStatus.Frozen);
+                    executableTargets.add(currentTarget);
                 }
             }
         }
 
-        return set;
+        return executableTargets;
     }
 }

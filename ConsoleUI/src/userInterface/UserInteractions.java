@@ -1,10 +1,11 @@
 package userInterface;
 
+import graphAnalyzers.PathFinder;
 import myExceptions.EmptyGraph;
 import myExceptions.NoGraphExisted;
 import target.Graph;
 import target.Target;
-import task.CircleFinder;
+import graphAnalyzers.CircleFinder;
 import task.SimulationTask;
 import task.Task;
 import java.io.*;
@@ -20,6 +21,8 @@ public class UserInteractions implements OutputInterface, InputInterface
     GraphSummary graphSummary;
     static final Integer MAX_CHOICE = 9;
     private final CircleFinder circleFinder = new CircleFinder();
+    private final PathFinder pathFinder = new PathFinder();
+    private Path xmlFilePath;
 
     public void SystemExecute() {
 
@@ -51,7 +54,7 @@ public class UserInteractions implements OutputInterface, InputInterface
                     }
                     case 5: {
                         incremental = askForIncremental();
-                        TaskExecuting.executeTask(graph, incremental, graphSummary);
+                        TaskExecuting.executeTask(graph, incremental, graphSummary, xmlFilePath);
                         graphSummary.setFirstRun(false);
                         break;
                     }
@@ -123,10 +126,8 @@ public class UserInteractions implements OutputInterface, InputInterface
             System.out.println("Would you like to start from scratch? (y/n)");
             Boolean fromScratch = yesOrNo();
 
-            if (fromScratch) {
+            if (fromScratch)
                 graphSummary = new GraphSummary(graph);
-                TaskExecuting.clearTaskHistory(graph);
-            }
 
             return fromScratch;
         } catch (NullPointerException ex) {
@@ -144,9 +145,9 @@ public class UserInteractions implements OutputInterface, InputInterface
                 String filePath = scanner.nextLine();
                 filePath = filePath.trim();
 
-                Path path = Paths.get(filePath);
-                graph = TaskExecuting.extractFromXMLToGraph(path);
-                System.out.println("Graph " + graph.getGraphName() + " loaded successfully from " + path.getFileName().toString() + " !");
+                xmlFilePath = Paths.get(filePath);
+                graph = TaskExecuting.extractFromXMLToGraph(xmlFilePath);
+                System.out.println("Graph " + graph.getGraphName() + " loaded successfully from " + xmlFilePath.getFileName().toString() + " !");
                 graphSummary = new GraphSummary(graph);
                 return;
             } catch (Exception ex) {
@@ -271,7 +272,7 @@ public class UserInteractions implements OutputInterface, InputInterface
         System.out.println("6. Exit.");
         System.out.println("7. Save system status.");
         System.out.println("8. Load system status.");
-        System.out.println("9. Check if target in a circle.");
+        System.out.println("9. Check if target is in a circle.");
     }
 
     @Override
@@ -314,7 +315,7 @@ public class UserInteractions implements OutputInterface, InputInterface
                         return;
                 }
 
-                if (!graph.prechecksForTargetsConnection(sourceTargetName, destTargetName)) {
+                if (!pathFinder.prechecksForTargetsConnection(sourceTargetName, destTargetName, graph)) {
                     System.out.println("There are no paths between " + sourceTargetName + " and " + destTargetName);
                     return;
                 }
@@ -336,7 +337,7 @@ public class UserInteractions implements OutputInterface, InputInterface
                         System.out.print("Please enter a valid choice (d/r): ");
                 }
 
-                ArrayList<String> paths = graph.getPathsFromTargets(sourceTarget, destTarget, connection);
+                ArrayList<String> paths = pathFinder.getPathsFromTargets(sourceTarget, destTarget, connection);
 
                 if (paths.size() == 0)
                     System.out.println("There are no paths between " + sourceTargetName + " and " + destTargetName + " as required.");
