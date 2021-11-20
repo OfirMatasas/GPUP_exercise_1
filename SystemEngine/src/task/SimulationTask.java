@@ -68,7 +68,7 @@ public class SimulationTask extends Task{
         graphSummary.getTargetsSummaryMap().get(TargetName).stopTheClock();
     }
 
-    public void executeTask(Graph graph, Boolean fromScratch, GraphSummary graphSummary, Path xmlFilePath) throws OpeningFileCrash, FileNotFound, NoFailedTargets {
+    public void executeTask(Graph graph, Boolean fromScratch, GraphSummary graphSummary, Path xmlFilePath) throws OpeningFileCrash, FileNotFound {
         Path directoryPath = taskOutput.createNewDirectoryOfTaskLogs("Simulation Task", xmlFilePath);
         Path filePath;
         this.graph = graph;
@@ -86,8 +86,6 @@ public class SimulationTask extends Task{
 
         //Make a set of executable targets
         Set<Target> executableTargets = makeExecutableTargetsSet(fromScratch);
-        if (executableTargets.isEmpty())
-            throw new NoFailedTargets();
 
         //Starting task on graph
         taskOutput.printStartOfTaskOnGraph(graph.getGraphName());

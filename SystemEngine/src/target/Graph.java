@@ -4,18 +4,12 @@ import java.io.Serializable;
 import java.util.*;
 
 public class Graph implements Serializable {
+    //--------------------------------------------------Members-----------------------------------------------------//
     private String graphName;
     private Map<String, Target> graphTargets;
     private Map<Target.TargetProperty, Set<Target>> targetsByProperties;
 
-    public String getGraphName() {
-        return graphName;
-    }
-
-    public void setGraphName(String graphName) {
-        this.graphName = graphName;
-    }
-
+    //------------------------------------------------Constructors--------------------------------------------------//
     public Graph() {
         this.graphTargets = new HashMap<>();
         this.targetsByProperties = new HashMap<>();
@@ -25,6 +19,21 @@ public class Graph implements Serializable {
         targetsByProperties.put(Target.TargetProperty.MIDDLE, new HashSet<>());
     }
 
+    //--------------------------------------------------Getters-----------------------------------------------------//
+    public String getGraphName() {
+        return graphName;
+    }
+
+    public Map<String, Target> getGraphTargets() {
+        return graphTargets;
+    }
+
+    //--------------------------------------------------Setters-----------------------------------------------------//
+    public void setGraphName(String graphName) {
+        this.graphName = graphName;
+    }
+
+    //--------------------------------------------------Methods-----------------------------------------------------//
     public int numberOfTargetsByProperty(Target.TargetProperty property)
     {
         return targetsByProperties.get(property).size();
@@ -33,10 +42,6 @@ public class Graph implements Serializable {
     public Boolean isEmpty()
     {
         return graphTargets.size() == 0;
-    }
-
-    public Map<String, Target> getGraphTargets() {
-        return graphTargets;
     }
 
     public void addNewTargetToTheGraph(Target... newTargets) {
@@ -73,7 +78,6 @@ public class Graph implements Serializable {
             targetsByProperties.get(currentTargetProperty).add(currentTarget);
             currentTarget.setTargetProperty(currentTargetProperty);
         }
-
     }
 
     private void clearTargetsByProperties()
@@ -83,44 +87,4 @@ public class Graph implements Serializable {
         targetsByProperties.get(Target.TargetProperty.LEAF).clear();
         targetsByProperties.get(Target.TargetProperty.INDEPENDENT).clear();
     }
-
-//    public Map<Target.ResultStatus, Integer> calculateResults()
-//    {
-//        Map<Target.ResultStatus, Integer> mapped = new HashMap<>();
-//        Integer succeeded=0, frozen=0, failed=0, warning=0;
-//
-//        for(Target currentTarget : graphTargets.values())
-//        {
-//            switch (currentTarget.getResultStatus())
-//            {
-//                case Frozen:
-//                {
-//                    frozen++;
-//                    break;
-//                }
-//                case Failure:
-//                {
-//                    failed++;
-//                    break;
-//                }
-//                case Success:
-//                {
-//                    succeeded++;
-//                    break;
-//                }
-//                case Warning:
-//                {
-//                    warning++;
-//                    break;
-//                }
-//            }
-//        }
-//
-//        mapped.put(Target.ResultStatus.Success, succeeded);
-//        mapped.put(Target.ResultStatus.Failure, failed);
-//        mapped.put(Target.ResultStatus.Warning, warning);
-//        mapped.put(Target.ResultStatus.Frozen, frozen);
-//
-//        return mapped;
-//    }
 }

@@ -19,35 +19,43 @@ import java.time.Instant;
 import java.util.*;
 
 public abstract class Task {
+    //--------------------------------------------------Members-----------------------------------------------------//
     protected Map<Target, TaskParameters> targetsParameters;
     protected Random rand;
     protected TaskOutput taskOutput;
     protected Graph graph;
     protected GraphSummary graphSummary;
 
+    //------------------------------------------------Constructors--------------------------------------------------//
     public Task() {
         this.rand = new Random();
         this.taskOutput = new TaskOutput();
     }
 
+    //--------------------------------------------------Getters-----------------------------------------------------//
     public Map<Target, TaskParameters> getTargetParameters()
     {
         return this.targetsParameters;
-    }
-
-    public void makeNewTargetParameters()
-    {
-        this.targetsParameters = new HashMap<>();
     }
 
     public Map<Target, TaskParameters> getTargetsParameters() {
         return targetsParameters;
     }
 
+    //--------------------------------------------------Setters-----------------------------------------------------//
+    public void makeNewTargetParameters()
+    {
+        this.targetsParameters = new HashMap<>();
+    }
+
+    //----------------------------------------------Abstract Methods------------------------------------------------//
     abstract public void executeTaskOnTarget(Target target);
+
     abstract public void executeTask(Graph graph, Boolean fromScratch, GraphSummary graphSummary, Path xmlFilePath) throws OpeningFileCrash, FileNotFound, NoFailedTargets;
+
     abstract public Set<Target> makeExecutableTargetsSet(Boolean fromScratch);
 
+    //--------------------------------------------------Methods-----------------------------------------------------//
     public void preparationsForTask()
     {
         TargetSummary currentTargetSummary;
@@ -94,42 +102,5 @@ public abstract class Task {
         return returnedSet;
     }
 
-    public GPUPDescriptor fromXmlFileToObject(Path fileName)
-    {
-        GPUPDescriptor descriptor = null;
-        try
-        {
-            File file = new File(fileName.toString());
-            JAXBContext jaxbContext = JAXBContext.newInstance(GPUPDescriptor.class);
 
-            Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-            descriptor = (GPUPDescriptor)jaxbUnmarshaller.unmarshal(file);
-        }
-        catch (JAXBException e)
-        {
-            e.printStackTrace();
-        }
-
-        return descriptor;
-    }
-
-    public Graph extractFromXMLToGraph(Path path) throws NotXMLFile, FileNotFound, DoubledTarget, InvalidConnectionBetweenTargets, EmptyGraph {
-        if(!path.getFileName().toString().endsWith(".xml"))
-        {
-            throw new NotXMLFile(path.getFileName().toString());
-        }
-        else if(!Files.isExecutable(path))
-        {
-            throw new FileNotFound(path.getFileName().toString());
-        }
-        //The file can be executed
-        GPUPDescriptor descriptor = fromXmlFileToObject(path);
-        ResourceChecker checker = new ResourceChecker();
-        Graph graph = checker.checkResource(descriptor);
-
-        if(graph != null)
-            graph.calculateProperties();
-
-        return graph;
-    }
 }

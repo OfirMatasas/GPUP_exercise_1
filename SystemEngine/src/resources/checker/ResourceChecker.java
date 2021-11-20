@@ -1,20 +1,60 @@
 package resources.checker;
 
-import myExceptions.DoubledTarget;
-import myExceptions.EmptyGraph;
-import myExceptions.InvalidConnectionBetweenTargets;
+import myExceptions.*;
 import resources.generated.GPUPDescriptor;
 import resources.generated.GPUPTarget;
 import resources.generated.GPUPTargetDependencies;
 import target.Graph;
 import target.Target;
+
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Unmarshaller;
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 
 public class ResourceChecker{
 
-    enum DependencyType { requiredFor, dependsOn};
+    private enum DependencyType { requiredFor, dependsOn};
 
-    public Graph checkResource(GPUPDescriptor descriptor) throws InvalidConnectionBetweenTargets, DoubledTarget, EmptyGraph {
+    public Graph extractFromXMLToGraph(Path path) throws NotXMLFile, FileNotFound, DoubledTarget, InvalidConnectionBetweenTargets, EmptyGraph {
+        if(!path.getFileName().toString().endsWith(".xml"))
+            throw new NotXMLFile(path.getFileName().toString());
+        else if(!Files.isExecutable(path))
+            throw new FileNotFound(path.getFileName().toString());
+
+        //The file can be executed
+        GPUPDescriptor descriptor = fromXmlFileToObject(path);
+        Graph graph = checkResource(descriptor);
+
+        if(graph != null)
+            graph.calculateProperties();
+
+        return graph;
+    }
+
+    private GPUPDescriptor fromXmlFileToObject(Path fileName)
+    {
+        GPUPDescriptor descriptor = null;
+        try
+        {
+            File file = new File(fileName.toString());
+            JAXBContext jaxbContext = JAXBContext.newInstance(GPUPDescriptor.class);
+
+            Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+            descriptor = (GPUPDescriptor)jaxbUnmarshaller.unmarshal(file);
+        }
+        catch (JAXBException e)
+        {
+            e.printStackTrace();
+        }
+
+        return descriptor;
+    }
+
+    private Graph checkResource(GPUPDescriptor descriptor) throws InvalidConnectionBetweenTargets, DoubledTarget, EmptyGraph {
         List<GPUPTarget> gpupTargetsAsList = descriptor.getGPUPTargets().getGPUPTarget();
         Graph graph = FillTheGraphWithTargets(gpupTargetsAsList);
         graph.setGraphName(descriptor.getGPUPConfiguration().getGPUPGraphName());
@@ -51,7 +91,7 @@ public class ResourceChecker{
         return graph;
     }
 
-    public Graph FillTheGraphWithTargets(List<GPUPTarget> lst) throws DoubledTarget {
+    private Graph FillTheGraphWithTargets(List<GPUPTarget> lst) throws DoubledTarget {
         Graph graph = new Graph();
         Target newTarget;
 
@@ -70,8 +110,7 @@ public class ResourceChecker{
         return graph;
     }
 
-    public Boolean checkValidConnectionBetweenTwoTargets(
-            Target target1, Target target2,String depType)
+    private Boolean checkValidConnectionBetweenTwoTargets(Target target1, Target target2,String depType)
     {
         String target1Name = target1.getTargetName(), target2Name = target2.getTargetName();
 

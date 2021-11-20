@@ -7,48 +7,62 @@ import java.util.Objects;
 import java.util.Set;
 
 public class Target implements Serializable {
+    //--------------------------------------------------Enums-------------------------------------------------------//
     static public enum TargetProperty { LEAF, MIDDLE, ROOT, INDEPENDENT }
     static public enum Connection { REQUIRED_FOR, DEPENDS_ON }
 
+    //--------------------------------------------------Members-----------------------------------------------------//
     private Set<Target> dependsOnTargets;
     private Set<Target> requiredForTargets;
     private TargetProperty targetProperty;
     private String targetName;
     private String extraInformation;
 
-    public String getTargetName() {
-        return targetName;
-    }
-
-    public void setTargetName(String targetName) {
-        this.targetName = targetName;
-    }
-
-    public String getExtraInformation() {
-        return extraInformation;
-    }
-
-    public void setExtraInformation(String extraInformation) {
-        this.extraInformation = extraInformation;
-    }
-
+    //------------------------------------------------Constructors--------------------------------------------------//
     public Target() {
         this.dependsOnTargets = new HashSet<>();
         this.requiredForTargets = new HashSet<>();
         this.targetProperty = TargetProperty.INDEPENDENT;
     }
 
-    public Set<Target> getDependsOnTargets() {
-        return dependsOnTargets;
+    //--------------------------------------------------Getters-----------------------------------------------------//
+    public String getTargetName() {
+        return targetName;
     }
 
-    public void setDependsOnTargets(Set<Target> dependsOnTargets) {
-        this.dependsOnTargets = dependsOnTargets;
+    public String getExtraInformation() {
+        return extraInformation;
+    }
+
+    public Set<Target> getDependsOnTargets() {
+        return dependsOnTargets;
     }
 
     public Set<Target> getRequiredForTargets() {
         return requiredForTargets;
     }
+
+    public TargetProperty getTargetProperty() {
+        return targetProperty;
+    }
+
+    //--------------------------------------------------Setters-----------------------------------------------------//
+    public void setTargetName(String targetName) {
+        this.targetName = targetName;
+    }
+
+    public void setExtraInformation(String extraInformation) {
+        this.extraInformation = extraInformation;
+    }
+
+    public void setTargetProperty(TargetProperty targetProperty) {
+        this.targetProperty = targetProperty;
+    }
+
+    //--------------------------------------------------Methods-----------------------------------------------------//
+    public void addToDependsOn(Target dependsOn) { dependsOnTargets.add(dependsOn); }
+
+    public void addToRequiredFor(Target requiredFor) { requiredForTargets.add(requiredFor); }
 
     @Override
     public boolean equals(Object o) {
@@ -62,20 +76,4 @@ public class Target implements Serializable {
     public int hashCode() {
         return Objects.hash(targetName);
     }
-
-    public void setRequireForTargets(Set<Target> requireForTargets) {
-        this.requiredForTargets = requireForTargets;
-    }
-
-    public TargetProperty getTargetProperty() {
-        return targetProperty;
-    }
-
-    public void setTargetProperty(TargetProperty targetProperty) {
-        this.targetProperty = targetProperty;
-    }
-
-    public void addToDependsOn(Target dependsOn) { dependsOnTargets.add(dependsOn); }
-
-    public void addToRequiredFor(Target requiredFor) { requiredForTargets.add(requiredFor); }
 }

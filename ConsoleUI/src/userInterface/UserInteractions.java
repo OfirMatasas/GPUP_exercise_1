@@ -5,6 +5,7 @@ import myExceptions.EmptyGraph;
 import myExceptions.NoFailedTargets;
 import myExceptions.NoGraphExisted;
 import org.omg.PortableInterceptor.SUCCESSFUL;
+import resources.checker.ResourceChecker;
 import target.Graph;
 import target.Target;
 import graphAnalyzers.CircleFinder;
@@ -13,10 +14,10 @@ import task.Task;
 import java.io.*;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.sql.SQLOutput;
 import java.util.*;
 
-public class UserInteractions implements OutputInterface, InputInterface
-{
+public class UserInteractions implements OutputInterface, InputInterface {
     static Scanner scanner = new Scanner(System.in);
     Graph graph;
     Task TaskExecuting = new SimulationTask();
@@ -24,6 +25,7 @@ public class UserInteractions implements OutputInterface, InputInterface
     static final Integer MAX_CHOICE = 9;
     private final CircleFinder circleFinder = new CircleFinder();
     private final PathFinder pathFinder = new PathFinder();
+    private final ResourceChecker resourceChecker = new ResourceChecker();
     private Path xmlFilePath;
 
     public void SystemExecute() {
@@ -83,12 +85,12 @@ public class UserInteractions implements OutputInterface, InputInterface
                 }
             } catch (Exception ex) {
                 System.out.println(ex.getMessage());
+                System.out.println("Returning to main menu.\n");
             }
         }
     }
 
-    private void checkIfTargetContainedInACircle() throws NoGraphExisted, EmptyGraph
-    {
+    private void checkIfTargetContainedInACircle() throws NoGraphExisted, EmptyGraph {
         try {
             if (graph.isEmpty()) {
                 throw new EmptyGraph();
@@ -114,7 +116,7 @@ public class UserInteractions implements OutputInterface, InputInterface
         }
     }
 
-    public Boolean askForIncremental() throws EmptyGraph, NoGraphExisted{
+    public Boolean askForIncremental() throws EmptyGraph, NoGraphExisted, NoFailedTargets {
         try {
             if (graph.isEmpty())
                 throw new EmptyGraph();
@@ -130,6 +132,17 @@ public class UserInteractions implements OutputInterface, InputInterface
 
             if (fromScratch)
                 graphSummary = new GraphSummary(graph);
+            else
+            {
+                //If all the targets in the graph are already succeeded - no need for running a new task
+                if(graphSummary.getTargetsSummaryMap()
+                        .values()
+                        .stream()
+                        .noneMatch(ts -> ts.getResultStatus().equals(TargetSummary.ResultStatus.Failure)))
+                {
+                    throw new NoFailedTargets();
+                }
+            }
 
             return fromScratch;
         } catch (NullPointerException ex) {
@@ -148,7 +161,7 @@ public class UserInteractions implements OutputInterface, InputInterface
                 filePath = filePath.trim();
 
                 xmlFilePath = Paths.get(filePath);
-                graph = TaskExecuting.extractFromXMLToGraph(xmlFilePath);
+                graph = resourceChecker.extractFromXMLToGraph(xmlFilePath);
                 System.out.println("Graph " + graph.getGraphName() + " loaded successfully from " + xmlFilePath.getFileName().toString() + " !");
                 graphSummary = new GraphSummary(graph);
                 return;
@@ -272,6 +285,7 @@ public class UserInteractions implements OutputInterface, InputInterface
         System.out.println("4. Find connection between 2 targets.");
         System.out.println("5. Execute task.");
         System.out.println("6. Exit.");
+        System.out.println("\nBonuses:");
         System.out.println("7. Save system status.");
         System.out.println("8. Load system status.");
         System.out.println("9. Check if target is in a circle.");
@@ -291,70 +305,71 @@ public class UserInteractions implements OutputInterface, InputInterface
             Character connectionChoice;
 
             while (true) {
-                while (true) {
-                    System.out.print("Please enter the name of the source target: ");
-                    sourceTargetName = scanner.nextLine();
-                    sourceTarget = graph.getGraphTargets().get(sourceTargetName);
-                    if (sourceTarget != null)
-                        break;
+                sourceTarget = getTargetFromUser("source");
+                if (sourceTarget == null)
+                    return;
 
-                    System.out.println("There's no " + sourceTargetName + " target in the graph.");
-                    System.out.println("Would you like to try again? (y/n)");
-                    if (!yesOrNo())
-                        return;
-                }
+                destTarget = getTargetFromUser("destination");
+                if (destTarget == null)
+                    return;
 
-                while (true) {
-                    System.out.print("Please enter the name of the destination target: ");
-                    destTargetName = scanner.nextLine();
-                    destTarget = graph.getGraphTargets().get(destTargetName);
-                    if (destTarget != null)
-                        break;
-
-                    System.out.println("There's no " + destTargetName + " target in the graph.");
-                    System.out.println("Would you like to try again? (y/n)");
-                    if (!yesOrNo())
-                        return;
-                }
+                sourceTargetName = sourceTarget.getTargetName();
+                destTargetName = destTarget.getTargetName();
 
                 if (!pathFinder.prechecksForTargetsConnection(sourceTargetName, destTargetName, graph)) {
                     System.out.println("There are no paths between " + sourceTargetName + " and " + destTargetName);
-                    return;
+                } else {
+                    while (true) {
+                        System.out.println("Please enter the connection you'd like to see between the source and destination targets: ");
+                        System.out.println("D - Source depends on destination, R - Source required for destination");
+
+                        connectionChoice = scanner.next().charAt(0);
+                        scanner.nextLine();
+
+                        if (connectionChoice.toString().equalsIgnoreCase("R")) {
+                            connection = Target.Connection.REQUIRED_FOR;
+                            break;
+                        } else if (connectionChoice.toString().equalsIgnoreCase("D")) {
+                            connection = Target.Connection.DEPENDS_ON;
+                            break;
+                        } else
+                            System.out.print("Please enter a valid choice (D/R): ");
+                    }
+
+                    ArrayList<String> paths = pathFinder.getPathsFromTargets(sourceTarget, destTarget, connection);
+
+                    if (paths.size() == 0)
+                        System.out.println("There are no paths between " + sourceTargetName + " and " + destTargetName + " as required.");
+                    else {
+                        System.out.println("There are " + paths.size() + " paths between " + sourceTargetName + " and " + destTargetName + ":");
+                        paths.forEach(System.out::println);
+                    }
                 }
 
-                while (true) {
-                    System.out.println("Please enter the connection you'd like to see between the source and destination targets: ");
-                    System.out.println("d - Source depends on destination, r - Source required for destination");
-
-                    connectionChoice = scanner.next().charAt(0);
-                    scanner.nextLine();
-
-                    if (connectionChoice.toString().equalsIgnoreCase("R")) {
-                        connection = Target.Connection.REQUIRED_FOR;
-                        break;
-                    } else if (connectionChoice.toString().equalsIgnoreCase("D")) {
-                        connection = Target.Connection.DEPENDS_ON;
-                        break;
-                    } else
-                        System.out.print("Please enter a valid choice (d/r): ");
-                }
-
-                ArrayList<String> paths = pathFinder.getPathsFromTargets(sourceTarget, destTarget, connection);
-
-                if (paths.size() == 0)
-                    System.out.println("There are no paths between " + sourceTargetName + " and " + destTargetName + " as required.");
-                else {
-                    System.out.println("There are " + paths.size() + " paths between " + sourceTargetName + " and " + destTargetName + ":");
-                    for (String currentPath : paths)
-                        System.out.println(currentPath);
-                }
-
-                System.out.println("Would you like to find more connections? (y/n)");
+                System.out.println("Would you like to find other connections? (y/n)");
                 if (!yesOrNo())
                     return;
             }
         } catch (NullPointerException ex) {
             throw new NoGraphExisted();
+        }
+    }
+
+    public Target getTargetFromUser(String srcOrDest) {
+        Target target;
+        String targetName;
+
+        while (true) {
+            System.out.print("Please enter the name of the " + srcOrDest + " target: ");
+            targetName = scanner.nextLine();
+            target = graph.getGraphTargets().get(targetName);
+            if (target != null)
+                return target;
+
+            System.out.println("There's no " + targetName + " target in the graph.");
+            System.out.println("Would you like to try again? (y/n)");
+            if (!yesOrNo())
+                return null;
         }
     }
 
@@ -377,7 +392,8 @@ public class UserInteractions implements OutputInterface, InputInterface
                 out.writeObject(graphSummary);
                 out.flush();
                 out.close();
-                //check if was written successfully
+
+                //Check if the saving succeeded
                 System.out.println("File saved successfully!");
                 return;
             } catch (IOException ex) {
@@ -399,7 +415,8 @@ public class UserInteractions implements OutputInterface, InputInterface
             try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(loadPath))) {
                 graph = (Graph) in.readObject();
                 graphSummary = (GraphSummary) in.readObject();
-                //check if was written successfully
+
+                //Check if the loading succeeded
                 System.out.println("Loaded " + graphSummary.getGraphName() + " graph successfully from file!");
                 return;
             } catch (Exception ex) {
@@ -429,7 +446,7 @@ public class UserInteractions implements OutputInterface, InputInterface
             throw new NoGraphExisted();
         }
     }
-}
+
 //    public void initGraph() { //Circled
 //        Target target1 = new Target(), target2 = new Target(), target3 = new Target();
 //        Target target4 = new Target(), target5 = new Target(), target6 = new Target();
@@ -452,8 +469,8 @@ public class UserInteractions implements OutputInterface, InputInterface
 //        graph = new Graph();
 //        graph.addNewTargetToTheGraph(target1, target2, target3, target4, target5, target6);
 //    }
-
-
+//
+//
 //    public void initGraph() //Generic graph
 //    {
 //        Target target1 = new Target(), target2 = new Target(), target3 = new Target(), target4 = new Target();
@@ -488,8 +505,7 @@ public class UserInteractions implements OutputInterface, InputInterface
 //        target3.addToRequiredFor(target1);
 //        target1.addToDependsOn(target2);
 //
-////        target6.addToDependsOn(target4);
-////        target4.addToRequiredFor(target6);
-//
+//        graph = new Graph();
 //        graph.addNewTargetToTheGraph(target1, target2, target3, target4, target5, target6);
 //    }
+}
