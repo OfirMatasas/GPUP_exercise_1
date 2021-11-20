@@ -1,21 +1,11 @@
 package task;
 
 import myExceptions.*;
-import resources.checker.ResourceChecker;
-import resources.generated.GPUPDescriptor;
 import target.Graph;
 import target.Target;
 import userInterface.GraphSummary;
 import userInterface.TargetSummary;
-
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Unmarshaller;
-import java.io.File;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.Duration;
-import java.time.Instant;
 import java.util.*;
 
 public abstract class Task {
@@ -66,6 +56,8 @@ public abstract class Task {
 
             currentTargetSummary.setRunning(false);
         }
+
+        graphSummary.setSkippedTargetsToZero();
     }
 
     public Set<Target> addNewTargetsToExecutableSet(Target lastTargetFinished)

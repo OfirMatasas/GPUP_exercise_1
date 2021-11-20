@@ -4,7 +4,6 @@ import task.TaskParameters;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.InputMismatchException;
-import java.util.Map;
 import java.util.Scanner;
 
 public class TaskRequirements {

@@ -1,7 +1,6 @@
 package task;
 
 import java.time.Duration;
-import java.time.Instant;
 
 public class TaskParameters {
     private Duration processingTime;

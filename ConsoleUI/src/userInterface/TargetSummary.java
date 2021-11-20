@@ -1,8 +1,6 @@
 package userInterface;
 
-import target.Graph;
 import target.Target;
-
 import java.io.Serializable;
 import java.time.Duration;
 import java.time.Instant;

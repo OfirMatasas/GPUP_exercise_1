@@ -1,7 +1,5 @@
 package task;
 
-import target.Graph;
-import target.Target;
 import userInterface.GraphSummary;
 import userInterface.TargetSummary;
 import java.io.*;
@@ -14,7 +12,6 @@ import java.time.Duration;
 import java.util.Date;
 import java.util.Map;
 import myExceptions.*;
-import userInterface.UserInteractions;
 
 public class TaskOutput
 {
@@ -106,7 +103,7 @@ public class TaskOutput
             os.write(timeSpentFormatted.getBytes(StandardCharsets.UTF_8));
 
             Map<TargetSummary.ResultStatus, Integer> results = graphSummary.getAllResultStatus();
-            String succeeded, warnings, failed, frozen;
+            String succeeded, warnings, failed, skipped;
 
             succeeded = "Number of targets succeeded: " + results.get(TargetSummary.ResultStatus.Success) + "\n";
             os.write(succeeded.getBytes(StandardCharsets.UTF_8));
@@ -116,6 +113,9 @@ public class TaskOutput
 
             failed = "Number of targets failed: " + results.get(TargetSummary.ResultStatus.Failure) + "\n";
             os.write(failed.getBytes(StandardCharsets.UTF_8));
+
+            skipped = "Number of targets skipped: " + graphSummary.getSkippedTargets() + "\n";
+            os.write(skipped.getBytes(StandardCharsets.UTF_8));
 
             for(TargetSummary currentTarget : graphSummary.getTargetsSummaryMap().values())
             {
@@ -136,12 +136,16 @@ public class TaskOutput
 
             os.write("-----------------------\n".getBytes(StandardCharsets.UTF_8));
 
-            String targetName, result, timeSpentFormatted;
+            String targetName, timeSpentFormatted;
+            String result = "Target's result status: ";
 
             targetName = "Target's name :" + targetSummary.getTargetName() + "\n";
             os.write(targetName.getBytes(StandardCharsets.UTF_8));
 
-            result = "Target's result status :" + targetSummary.getResultStatus() + "\n";
+            if(targetSummary.isSkipped())
+                result += "Skipped\n";
+            else
+                result += targetSummary.getResultStatus() + "\n";
             os.write(result.getBytes(StandardCharsets.UTF_8));
 
             if(!targetSummary.isSkipped())

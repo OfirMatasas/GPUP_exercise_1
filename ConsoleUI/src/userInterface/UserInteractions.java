@@ -4,7 +4,6 @@ import graphAnalyzers.PathFinder;
 import myExceptions.EmptyGraph;
 import myExceptions.NoFailedTargets;
 import myExceptions.NoGraphExisted;
-import org.omg.PortableInterceptor.SUCCESSFUL;
 import resources.checker.ResourceChecker;
 import target.Graph;
 import target.Target;
@@ -14,7 +13,6 @@ import task.Task;
 import java.io.*;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.sql.SQLOutput;
 import java.util.*;
 
 public class UserInteractions implements OutputInterface, InputInterface
@@ -168,8 +166,8 @@ public class UserInteractions implements OutputInterface, InputInterface
                     System.out.println("Target's name: " + targetName);
                     System.out.println("Target's property: " + selectedTarget.getTargetProperty());
 
-                    printRequiredForTargets(selectedTarget);
                     printDependsOnTargets(selectedTarget);
+                    printRequiredForTargets(selectedTarget);
                     printTargetExtraInformation(selectedTarget);
                     break;
                 }
@@ -187,6 +185,8 @@ public class UserInteractions implements OutputInterface, InputInterface
     public void printTargetExtraInformation(Target target) {
         if (target.getExtraInformation() != null)
             System.out.println("Target's extra information: " + target.getExtraInformation());
+        else
+            System.out.println("There's no extra information about this target.");
     }
 
     @Override
@@ -194,7 +194,7 @@ public class UserInteractions implements OutputInterface, InputInterface
         if (target.getDependsOnTargets().size() == 0)
             System.out.println("The target has no depends-on-targets.");
         else {
-            System.out.println("List of depends-on-targets: ");
+            System.out.println("List of directly depends-on-targets: ");
             for (Target currentTarget : target.getDependsOnTargets())
                 System.out.print(currentTarget.getTargetName() + " ");
             System.out.println();
@@ -206,7 +206,7 @@ public class UserInteractions implements OutputInterface, InputInterface
         if (target.getRequiredForTargets().size() == 0)
             System.out.println("The target has no required-for-targets.");
         else {
-            System.out.println("List of required-for-targets: ");
+            System.out.println("List of directly required-for-targets: ");
             for (Target currentTarget : target.getRequiredForTargets())
                 System.out.print(currentTarget.getTargetName() + " ");
             System.out.println();

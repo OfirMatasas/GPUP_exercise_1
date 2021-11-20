@@ -2,15 +2,11 @@ package userInterface;
 
 import target.Graph;
 import target.Target;
-
 import java.io.Serializable;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 public class GraphSummary implements Serializable {
     //--------------------------------------------------Members-----------------------------------------------------//
@@ -20,6 +16,7 @@ public class GraphSummary implements Serializable {
     private Map<String, TargetSummary> targetsSummaryMap;
     private Map<TargetSummary.ResultStatus, Integer> allResultStatus;
     private Boolean firstRun;
+    private Integer skippedTargets;
 
     //------------------------------------------------Constructors--------------------------------------------------//
     public GraphSummary(Graph graph) {
@@ -33,24 +30,26 @@ public class GraphSummary implements Serializable {
 
     //--------------------------------------------------Getters-----------------------------------------------------//
     public Boolean getFirstRun() {
-        return firstRun;
+        return this.firstRun;
     }
 
     public String getGraphName() {
-        return graphName;
+        return this.graphName;
     }
 
     public Map<TargetSummary.ResultStatus, Integer> getAllResultStatus() {
-        return allResultStatus;
+        return this.allResultStatus;
     }
 
     public Duration getTime() {
-        return totalTime;
+        return this.totalTime;
     }
 
     public Map<String, TargetSummary> getTargetsSummaryMap() {
-        return targetsSummaryMap;
+        return this.targetsSummaryMap;
     }
+
+    public Integer getSkippedTargets() { return this.skippedTargets; }
 
     //--------------------------------------------------Setters-----------------------------------------------------//
     public void setFirstRun(Boolean firstRun) {
@@ -59,7 +58,7 @@ public class GraphSummary implements Serializable {
 
     public void setRunningTargets(Target currentTarget, Boolean runningOrNot)
     {
-        targetsSummaryMap.get(currentTarget.getTargetName()).setRunning(runningOrNot);
+        this.targetsSummaryMap.get(currentTarget.getTargetName()).setRunning(runningOrNot);
 
         for(Target requiredForTarget : currentTarget.getRequiredForTargets())
             setRunningTargets(requiredForTarget, runningOrNot);
@@ -67,33 +66,46 @@ public class GraphSummary implements Serializable {
 
     public void setAllRequiredForTargetsOnSkipped(Target lastSkippedTarget, TargetSummary failedTargetSummary)
     {
+        TargetSummary targetSummary;
+
         for(Target newSkippedTarget : lastSkippedTarget.getRequiredForTargets())
         {
-            targetsSummaryMap.get(newSkippedTarget.getTargetName()).setSkipped(true);
+            targetSummary = this.targetsSummaryMap.get(newSkippedTarget.getTargetName());
+
+            if(!targetSummary.isSkipped())
+            {
+                this.skippedTargets++;
+                targetSummary.setSkipped(true);
+            }
 
             failedTargetSummary.addNewSkippedTarget(newSkippedTarget.getTargetName());
             setAllRequiredForTargetsOnSkipped(newSkippedTarget, failedTargetSummary);
         }
     }
 
+    public void setSkippedTargetsToZero()
+    {
+        this.skippedTargets = 0;
+    }
+
     //--------------------------------------------------Methods-----------------------------------------------------//
     public void startTheClock()
     {
-        timeStarted = Instant.now();
+        this.timeStarted = Instant.now();
     }
 
     public void stopTheClock()
     {
         Instant timeEnded = Instant.now();
-        totalTime = Duration.between(timeStarted, timeEnded);
+        this.totalTime = Duration.between(this.timeStarted, timeEnded);
     }
 
     public void calculateResults()
     {
-        allResultStatus = new HashMap<>();
+        this.allResultStatus = new HashMap<>();
         Integer succeeded = 0, failed = 0, warning = 0;
 
-        for(TargetSummary current : targetsSummaryMap.values())
+        for(TargetSummary current : this.targetsSummaryMap.values())
         {
             if(!current.isRunning())
                 continue;
@@ -118,8 +130,8 @@ public class GraphSummary implements Serializable {
             }
         }
 
-        allResultStatus.put(TargetSummary.ResultStatus.Success, succeeded);
-        allResultStatus.put(TargetSummary.ResultStatus.Failure, failed);
-        allResultStatus.put(TargetSummary.ResultStatus.Warning, warning);
+        this.allResultStatus.put(TargetSummary.ResultStatus.Success, succeeded);
+        this.allResultStatus.put(TargetSummary.ResultStatus.Failure, failed - this.skippedTargets);
+        this.allResultStatus.put(TargetSummary.ResultStatus.Warning, warning);
     }
 }
