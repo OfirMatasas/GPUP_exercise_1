@@ -5,12 +5,7 @@
 // Generated on: 2021.11.08 at 09:22:10 AM IST 
 //
 
-package generated;
-
-import resources.generated.GPUPConfiguration;
-import resources.generated.GPUPDescriptor;
-import resources.generated.GPUPTarget;
-import resources.generated.GPUPTargetDependencies;
+package resources.generated;
 
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.annotation.XmlElementDecl;

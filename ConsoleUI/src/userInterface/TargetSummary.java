@@ -12,9 +12,11 @@ import java.util.Set;
 
 public class TargetSummary implements Serializable
 {
-    static public enum RuntimeStatus { Frozen, Skipped, Waiting, InProcess, Finished }
-    static public enum ResultStatus { Success, Warning, Failure }
+    //--------------------------------------------------Enums-------------------------------------------------------//
+    public enum RuntimeStatus { Frozen, Skipped, Waiting, InProcess, Finished }
+    public enum ResultStatus { Success, Warning, Failure }
 
+    //--------------------------------------------------Members-----------------------------------------------------//
     private Duration actualTime, predictedTime;
     private final String targetName;
     private final String extraInformation;
@@ -25,6 +27,7 @@ public class TargetSummary implements Serializable
     private Set<String> skippedTargets;
     private final Set<String> openedTargets;
 
+    //------------------------------------------------Constructors--------------------------------------------------//
     public TargetSummary(String targetName) {
         this.targetName = targetName;
         this.actualTime = Duration.ZERO;
@@ -36,12 +39,17 @@ public class TargetSummary implements Serializable
         this.openedTargets = new HashSet<>();
     }
 
-    public boolean isRunning() {
-        return running;
+    //--------------------------------------------------Getters-----------------------------------------------------//
+    public String getTargetName() {
+        return targetName;
     }
 
-    public void setRunning(boolean running) {
-        this.running = running;
+    public String getExtraInformation() {
+        return extraInformation;
+    }
+
+    public boolean isRunning() {
+        return running;
     }
 
     public Set<String> getSkippedTargets() {
@@ -52,6 +60,49 @@ public class TargetSummary implements Serializable
         return predictedTime;
     }
 
+    public RuntimeStatus getRuntimeStatus() {
+        return runtimeStatus;
+    }
+
+    public Duration getTime() {
+        return actualTime;
+    }
+
+    public ResultStatus getResultStatus() {
+        return resultStatus;
+    }
+
+    public boolean isSkipped() {
+        return this.isSkipped;
+    }
+
+    public Set<String> getOpenedTargets() {
+        return openedTargets;
+    }
+
+    //--------------------------------------------------Setters-----------------------------------------------------//
+    public void setRunning(boolean running) {
+        this.running = running;
+    }
+
+    public void setPredictedTime(Duration predictedTime) {
+        this.predictedTime = predictedTime;
+    }
+
+    public void setRuntimeStatus(RuntimeStatus runtimeStatus) {
+        this.runtimeStatus = runtimeStatus;
+    }
+
+    public void setSkipped(boolean skipped) {
+        isSkipped = skipped;
+    }
+
+    public void setResultStatus(ResultStatus resultStatus) {
+        this.resultStatus = resultStatus;
+    }
+
+
+    //--------------------------------------------------Methods-----------------------------------------------------//
     public void startTheClock()
     {
         timeStarted = Instant.now();
@@ -61,10 +112,6 @@ public class TargetSummary implements Serializable
     {
         Instant timeEnded = Instant.now();
         actualTime = Duration.between(timeStarted, timeEnded);
-    }
-
-    public void setPredictedTime(Duration predictedTime) {
-        this.predictedTime = predictedTime;
     }
 
     public Boolean checkIfFailedBefore()
@@ -81,46 +128,6 @@ public class TargetSummary implements Serializable
     public void addNewSkippedTarget(String skippedTargetName)
     {
         skippedTargets.add(skippedTargetName);
-    }
-
-    public RuntimeStatus getRuntimeStatus() {
-        return runtimeStatus;
-    }
-
-    public void setRuntimeStatus(RuntimeStatus runtimeStatus) {
-        this.runtimeStatus = runtimeStatus;
-    }
-
-    public void setSkipped(boolean skipped) {
-        isSkipped = skipped;
-    }
-
-    public Duration getTime() {
-        return actualTime;
-    }
-
-    public void setTime(Duration time) {
-        this.actualTime = time;
-    }
-
-    public String getTargetName() {
-        return targetName;
-    }
-
-    public String getExtraInformation() {
-        return extraInformation;
-    }
-
-    public ResultStatus getResultStatus() {
-        return resultStatus;
-    }
-
-    public void setResultStatus(ResultStatus resultStatus) {
-        this.resultStatus = resultStatus;
-    }
-
-    public boolean isSkipped() {
-        return this.isSkipped;
     }
 
     public void checkForOpenTargets(Target executedTarget, GraphSummary graphSummary)
@@ -156,15 +163,6 @@ public class TargetSummary implements Serializable
             graphSummary.getTargetsSummaryMap().get(requiredForTarget.getTargetName()).setRuntimeStatus(runtimeStatus);
             setAllRequiredForTargetsRuntimeStatus(requiredForTarget, graphSummary, runtimeStatus);
         }
-    }
-
-    public void removeAllOpenedTargets()
-    {
-        openedTargets.clear();
-    }
-
-    public Set<String> getOpenedTargets() {
-        return openedTargets;
     }
 
     @Override

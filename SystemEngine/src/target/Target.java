@@ -12,8 +12,8 @@ public class Target implements Serializable {
     static public enum Connection { REQUIRED_FOR, DEPENDS_ON }
 
     //--------------------------------------------------Members-----------------------------------------------------//
-    private Set<Target> dependsOnTargets;
-    private Set<Target> requiredForTargets;
+    private final Set<Target> dependsOnTargets;
+    private final Set<Target> requiredForTargets;
     private TargetProperty targetProperty;
     private String targetName;
     private String extraInformation;

@@ -5,7 +5,7 @@
 // Generated on: 2021.11.08 at 09:22:10 AM IST 
 //
 
-package generated;
+package resources.generated;
 
 import resources.generated.GPUPTarget;
 
