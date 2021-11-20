@@ -88,6 +88,7 @@ public abstract class Task {
             {
                 returnedSet.add(candidateTarget);
                 candidateTargetSummary.setSkipped(false);
+                candidateTargetSummary.setRuntimeStatus(TargetSummary.RuntimeStatus.Waiting);
             }
         }
         return returnedSet;
