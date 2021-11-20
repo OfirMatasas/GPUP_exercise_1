@@ -17,7 +17,9 @@ import java.nio.file.Paths;
 import java.sql.SQLOutput;
 import java.util.*;
 
-public class UserInteractions implements OutputInterface, InputInterface {
+public class UserInteractions implements OutputInterface, InputInterface
+{
+    //--------------------------------------------------Members-----------------------------------------------------//
     static Scanner scanner = new Scanner(System.in);
     Graph graph;
     Task TaskExecuting = new SimulationTask();
@@ -28,6 +30,7 @@ public class UserInteractions implements OutputInterface, InputInterface {
     private final ResourceChecker resourceChecker = new ResourceChecker();
     private Path xmlFilePath;
 
+    //----------------------------------------------------Menu------------------------------------------------------//
     public void SystemExecute() {
 
         System.out.println("Welcome to our project!");
@@ -40,48 +43,21 @@ public class UserInteractions implements OutputInterface, InputInterface {
                 userSelection = getUserSelectionFromMenu();
 
                 switch (userSelection) {
-                    case 1: {
-                        loadFile();
-                        break;
-                    }
-                    case 2: {
-                        printGraphInformation();
-                        break;
-                    }
-                    case 3: {
-                        printTargetInformation();
-                        break;
-                    }
-                    case 4: {
-                        printTargetConnectionStatus();
-                        break;
-                    }
+                    case 1: { loadFile(); break; }
+                    case 2: { printGraphInformation(); break; }
+                    case 3: { printTargetInformation(); break; }
+                    case 4: { printTargetConnectionStatus(); break; }
                     case 5: {
                         incremental = askForIncremental();
                         TaskExecuting.executeTask(graph, incremental, graphSummary, xmlFilePath);
                         graphSummary.setFirstRun(false);
                         break;
                     }
-                    case 6: {
-                        exitFromSystem();
-                        break;
-                    }
-                    case 7: {
-                        saveSystemStatus();
-                        break;
-                    }
-                    case 8: {
-                        loadSystemStatus();
-                        break;
-                    }
-                    case 9: {
-                        checkIfTargetContainedInACircle();
-                        break;
-                    }
-                    default: {
-                        System.out.println("Please enter an option between 1-" + MAX_CHOICE + "!\n");
-                        break;
-                    }
+                    case 6: { exitFromSystem(); break; }
+                    case 7: { saveSystemStatus(); break; }
+                    case 8: { loadSystemStatus(); break; }
+                    case 9: { checkIfTargetContainedInACircle(); break; }
+                    default: { System.out.println("Please enter an option between 1-" + MAX_CHOICE + "!\n"); break; }
                 }
             } catch (Exception ex) {
                 System.out.println(ex.getMessage());
@@ -90,66 +66,41 @@ public class UserInteractions implements OutputInterface, InputInterface {
         }
     }
 
-    private void checkIfTargetContainedInACircle() throws NoGraphExisted, EmptyGraph {
-        try {
-            if (graph.isEmpty()) {
-                throw new EmptyGraph();
+    @Override
+    public void printMenu() {
+        System.out.println("Please choose from the options below:");
+        System.out.println("1. Load system details from file.");
+        System.out.println("2. Show graph details.");
+        System.out.println("3. Show target details.");
+        System.out.println("4. Find connection between 2 targets.");
+        System.out.println("5. Execute task.");
+        System.out.println("6. Exit.");
+        System.out.println("\nBonuses:");
+        System.out.println("7. Save system status.");
+        System.out.println("8. Load system status.");
+        System.out.println("9. Check if target is in a circle.");
+    }
+
+    @Override
+    public Integer getUserSelectionFromMenu() {
+        Integer selection;
+
+        while (true) {
+            try {
+                selection = scanner.nextInt();
+                scanner.nextLine();
+
+                if (selection > 0 && selection <= MAX_CHOICE)
+                    return selection;
+                System.out.println("Please choose between 1 and " + UserInteractions.MAX_CHOICE + ".");
+            } catch (InputMismatchException ex) {
+                System.out.println("Please enter an integer between 1 and " + UserInteractions.MAX_CHOICE + ".");
+                scanner.nextLine();
             }
-
-            Target target;
-            String targetName;
-
-            System.out.println("Please enter the target you would like to check if it is in the circle :");
-            targetName = scanner.nextLine();
-            target = graph.getGraphTargets().get(targetName);
-
-            if (target != null) {
-                circleFinder.checkIfCircled(target);
-                if (circleFinder.getCircled())
-                    System.out.println(circleFinder.getCirclePath());
-                else
-                    System.out.println("The target " + targetName + " is not in a circle.");
-            } else
-                System.out.println("There is no " + targetName + " in the graph!");
-        } catch (NullPointerException ex) {
-            throw new NoGraphExisted();
         }
     }
 
-    public Boolean askForIncremental() throws EmptyGraph, NoGraphExisted, NoFailedTargets {
-        try {
-            if (graph.isEmpty())
-                throw new EmptyGraph();
-
-            if (graphSummary.getFirstRun())
-            { //Making a brand-new graph summary for first run
-                graphSummary = new GraphSummary(graph);
-                return true;
-            }
-
-            System.out.println("Would you like to start from scratch? (y/n)");
-            Boolean fromScratch = yesOrNo();
-
-            if (fromScratch)
-                graphSummary = new GraphSummary(graph);
-            else
-            {
-                //If all the targets in the graph are already succeeded - no need for running a new task
-                if(graphSummary.getTargetsSummaryMap()
-                        .values()
-                        .stream()
-                        .noneMatch(ts -> ts.getResultStatus().equals(TargetSummary.ResultStatus.Failure)))
-                {
-                    throw new NoFailedTargets();
-                }
-            }
-
-            return fromScratch;
-        } catch (NullPointerException ex) {
-            throw new NoGraphExisted();
-        }
-    }
-
+    //------------------------------------------------Option 1------------------------------------------------------//
     @Override
     public void loadFile() {
         Boolean tryAgain = true;
@@ -173,21 +124,26 @@ public class UserInteractions implements OutputInterface, InputInterface {
         }
     }
 
-    public static Boolean yesOrNo() {
-        Character userSelection;
-        while (true) {
-            userSelection = scanner.next().charAt(0);
-            scanner.nextLine();
+    //------------------------------------------------Option 2------------------------------------------------------//
+    public void printGraphInformation() throws NoGraphExisted {
+        try {
+            if (graph.isEmpty()) {
+                System.out.println("The graph is empty!");
+                return;
+            }
 
-            if (userSelection.toString().equalsIgnoreCase("Y"))
-                return true;
-            else if (userSelection.toString().equalsIgnoreCase("N"))
-                return false;
-
-            System.out.println("Invalid selection. Try again (y/n): ");
+            Map<String, Target> graphTargets = graph.getGraphTargets();
+            System.out.println("Number of targets : " + graphTargets.size());
+            System.out.println("Number of leaf targets : " + graph.numberOfTargetsByProperty(Target.TargetProperty.LEAF));
+            System.out.println("Number of root targets : " + graph.numberOfTargetsByProperty(Target.TargetProperty.ROOT));
+            System.out.println("Number of middle targets : " + graph.numberOfTargetsByProperty(Target.TargetProperty.MIDDLE));
+            System.out.println("Number of independent targets : " + graph.numberOfTargetsByProperty(Target.TargetProperty.INDEPENDENT));
+        } catch (NullPointerException ex) {
+            throw new NoGraphExisted();
         }
     }
 
+    //------------------------------------------------Option 3------------------------------------------------------//
     @Override
     public void printTargetInformation() throws NoGraphExisted {
         try {
@@ -228,6 +184,12 @@ public class UserInteractions implements OutputInterface, InputInterface {
     }
 
     @Override
+    public void printTargetExtraInformation(Target target) {
+        if (target.getExtraInformation() != null)
+            System.out.println("Target's extra information: " + target.getExtraInformation());
+    }
+
+    @Override
     public void printDependsOnTargets(Target target) {
         if (target.getDependsOnTargets().size() == 0)
             System.out.println("The target has no depends-on-targets.");
@@ -251,46 +213,7 @@ public class UserInteractions implements OutputInterface, InputInterface {
         }
     }
 
-    @Override
-    public void printTargetExtraInformation(Target target) {
-        if (target.getExtraInformation() != null)
-            System.out.println("Target's extra information: " + target.getExtraInformation());
-    }
-
-    @Override
-    public Integer getUserSelectionFromMenu() {
-        Integer selection;
-
-        while (true) {
-            try {
-                selection = scanner.nextInt();
-                scanner.nextLine();
-
-                if (selection > 0 && selection <= MAX_CHOICE)
-                    return selection;
-                System.out.println("Please choose between 1 and " + UserInteractions.MAX_CHOICE + ".");
-            } catch (InputMismatchException ex) {
-                System.out.println("Please enter an integer between 1 and " + UserInteractions.MAX_CHOICE + ".");
-                scanner.nextLine();
-            }
-        }
-    }
-
-    @Override
-    public void printMenu() {
-        System.out.println("Please choose from the options below:");
-        System.out.println("1. Load system details from file.");
-        System.out.println("2. Show graph details.");
-        System.out.println("3. Show target details.");
-        System.out.println("4. Find connection between 2 targets.");
-        System.out.println("5. Execute task.");
-        System.out.println("6. Exit.");
-        System.out.println("\nBonuses:");
-        System.out.println("7. Save system status.");
-        System.out.println("8. Load system status.");
-        System.out.println("9. Check if target is in a circle.");
-    }
-
+    //------------------------------------------------Option 4------------------------------------------------------//
     @Override
     public void printTargetConnectionStatus() throws NoGraphExisted {
         try {
@@ -373,11 +296,48 @@ public class UserInteractions implements OutputInterface, InputInterface {
         }
     }
 
+    //------------------------------------------------Option 5------------------------------------------------------//
+    public Boolean askForIncremental() throws EmptyGraph, NoGraphExisted, NoFailedTargets {
+        try {
+            if (graph.isEmpty())
+                throw new EmptyGraph();
+
+            if (graphSummary.getFirstRun())
+            { //Making a brand-new graph summary for first run
+                graphSummary = new GraphSummary(graph);
+                return true;
+            }
+
+            System.out.println("Would you like to start from scratch? (y/n)");
+            Boolean fromScratch = yesOrNo();
+
+            if (fromScratch)
+                graphSummary = new GraphSummary(graph);
+            else
+            {
+                //If all the targets in the graph are already succeeded - no need for running a new task
+                if(graphSummary.getTargetsSummaryMap()
+                        .values()
+                        .stream()
+                        .noneMatch(ts -> ts.getResultStatus().equals(TargetSummary.ResultStatus.Failure)))
+                {
+                    throw new NoFailedTargets();
+                }
+            }
+
+            return fromScratch;
+        } catch (NullPointerException ex) {
+            throw new NoGraphExisted();
+        }
+    }
+
+    //------------------------------------------------Option 6------------------------------------------------------//
     @Override
     public void exitFromSystem() {
         System.exit(0);
     }
 
+    //------------------------------------------------Option 7------------------------------------------------------//
     @Override
     public void saveSystemStatus() throws NoGraphExisted {
         if (graph == null)
@@ -406,6 +366,7 @@ public class UserInteractions implements OutputInterface, InputInterface {
         }
     }
 
+    //------------------------------------------------Option 8------------------------------------------------------//
     @Override
     public void loadSystemStatus() {
         while (true) {
@@ -429,23 +390,50 @@ public class UserInteractions implements OutputInterface, InputInterface {
         }
     }
 
-    public void printGraphInformation() throws NoGraphExisted {
+    //------------------------------------------------Option 9------------------------------------------------------//
+    private void checkIfTargetContainedInACircle() throws NoGraphExisted, EmptyGraph {
         try {
             if (graph.isEmpty()) {
-                System.out.println("The graph is empty!");
-                return;
+                throw new EmptyGraph();
             }
 
-            Map<String, Target> graphTargets = graph.getGraphTargets();
-            System.out.println("Number of targets : " + graphTargets.size());
-            System.out.println("Number of leaf targets : " + graph.numberOfTargetsByProperty(Target.TargetProperty.LEAF));
-            System.out.println("Number of root targets : " + graph.numberOfTargetsByProperty(Target.TargetProperty.ROOT));
-            System.out.println("Number of middle targets : " + graph.numberOfTargetsByProperty(Target.TargetProperty.MIDDLE));
-            System.out.println("Number of independent targets : " + graph.numberOfTargetsByProperty(Target.TargetProperty.INDEPENDENT));
+            Target target;
+            String targetName;
+
+            System.out.println("Please enter the target you would like to check if it is in the circle :");
+            targetName = scanner.nextLine();
+            target = graph.getGraphTargets().get(targetName);
+
+            if (target != null) {
+                circleFinder.checkIfCircled(target);
+                if (circleFinder.getCircled())
+                    System.out.println(circleFinder.getCirclePath());
+                else
+                    System.out.println("The target " + targetName + " is not in a circle.");
+            } else
+                System.out.println("There is no " + targetName + " in the graph!");
         } catch (NullPointerException ex) {
             throw new NoGraphExisted();
         }
     }
+
+    //-------------------------------------------------Generic------------------------------------------------------//
+    public static Boolean yesOrNo() {
+        Character userSelection;
+        while (true) {
+            userSelection = scanner.next().charAt(0);
+            scanner.nextLine();
+
+            if (userSelection.toString().equalsIgnoreCase("Y"))
+                return true;
+            else if (userSelection.toString().equalsIgnoreCase("N"))
+                return false;
+
+            System.out.println("Invalid selection. Try again (y/n): ");
+        }
+    }
+
+    //-------------------------------------------------Graphs-------------------------------------------------------//
 
 //    public void initGraph() { //Circled
 //        Target target1 = new Target(), target2 = new Target(), target3 = new Target();
