@@ -33,13 +33,9 @@ public class SimulationTask extends Task{
         if(result <= getTargetParameters().get(target).getSuccessRate()) //Task succeeded
         {
             if(result <= getTargetParameters().get(target).getSuccessWithWarnings())
-            {
                 targetSummary.setResultStatus(TargetSummary.ResultStatus.Warning);
-            }
             else
-            {
                 targetSummary.setResultStatus(TargetSummary.ResultStatus.Success);
-            }
         }
         else //Task failed
         {
@@ -165,7 +161,7 @@ public class SimulationTask extends Task{
         for(TargetSummary currentTargetSummary : graphSummary.getTargetsSummaryMap().values())
         {
             currentTargetName = currentTargetSummary.getTargetName();
-            currentTarget = graph.getGraphTargets().get(currentTargetName);
+            currentTarget = graph.getTarget(currentTargetName);
 
             getTargetParameters().put(currentTarget, taskParameters);
             currentTargetSummary.setPredictedTime(taskParameters.getProcessingTime());
@@ -186,7 +182,8 @@ public class SimulationTask extends Task{
             {
                 Target.TargetProperty prop = currentTarget.getTargetProperty();
 
-                if(prop.equals(Target.TargetProperty.INDEPENDENT) || prop.equals(Target.TargetProperty.LEAF))
+                if(prop.equals(Target.TargetProperty.INDEPENDENT)
+                        || prop.equals(Target.TargetProperty.LEAF))
                 {
                     executableTargets.add(currentTarget);
                     graphSummary.setRunningTargets(currentTarget, true);

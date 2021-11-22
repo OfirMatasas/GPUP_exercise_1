@@ -66,7 +66,7 @@ public class ResourceChecker{
         for(GPUPTarget currentgpupTarget : gpupTargetsAsList)
         {
             currentTargetName = currentgpupTarget.getName();
-            currentTarget = graph.getGraphTargets().get(currentTargetName);
+            currentTarget = graph.getTarget(currentTargetName);
 
             if(currentgpupTarget.getGPUPTargetDependencies() == null)
                 continue;
@@ -74,7 +74,7 @@ public class ResourceChecker{
             for(GPUPTargetDependencies.GPUGDependency dep :
                     currentgpupTarget.getGPUPTargetDependencies().getGPUGDependency())
             {
-                secondTarget = graph.getGraphTargets().get(dep.getValue());
+                secondTarget = graph.getTarget(dep.getValue());
                 if(secondTarget == null)
                     throw new InvalidConnectionBetweenTargets(currentTargetName, dep.getValue());
 
@@ -96,7 +96,7 @@ public class ResourceChecker{
 
         for(GPUPTarget currentTarget : lst)
         {
-            if(graph.getGraphTargets().get(currentTarget.getName()) != null)
+            if(graph.getTarget(currentTarget.getName()) != null)
                 throw new DoubledTarget(currentTarget.getName());
 
             newTarget = new Target();

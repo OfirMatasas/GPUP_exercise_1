@@ -28,6 +28,11 @@ public class Graph implements Serializable {
         return graphTargets;
     }
 
+    public Target getTarget(String targetName)
+    {
+        return graphTargets.get(targetName.toLowerCase());
+    }
+
     //--------------------------------------------------Setters-----------------------------------------------------//
     public void setGraphName(String graphName) {
         this.graphName = graphName;
@@ -46,7 +51,7 @@ public class Graph implements Serializable {
 
     public void addNewTargetToTheGraph(Target... newTargets) {
         for(Target currentTarget : newTargets)
-            graphTargets.put(currentTarget.getTargetName(), currentTarget);
+            graphTargets.put(currentTarget.getTargetName().toLowerCase(), currentTarget);
 
         calculateProperties();
     }
@@ -59,7 +64,8 @@ public class Graph implements Serializable {
 
         for(Target currentTarget : graphTargets.values())
         {
-            if(currentTarget.getDependsOnTargets().size() == 0 && currentTarget.getRequiredForTargets().size() == 0)
+            if(currentTarget.getDependsOnTargets().size() == 0
+                    && currentTarget.getRequiredForTargets().size() == 0)
             {//Independent
                 currentTargetProperty = Target.TargetProperty.INDEPENDENT;
             }

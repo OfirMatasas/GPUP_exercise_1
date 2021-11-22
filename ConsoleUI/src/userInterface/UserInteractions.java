@@ -161,9 +161,11 @@ public class UserInteractions implements OutputInterface, InputInterface
 
                 System.out.print("Enter target's name: ");
                 String targetName = scanner.next();
-                if (graph.getGraphTargets().containsKey(targetName)) {
-                    Target selectedTarget = graph.getGraphTargets().get(targetName);
-                    System.out.println("Target's name: " + targetName);
+                Target selectedTarget = graph.getTarget(targetName);
+
+                if (selectedTarget != null)
+                {
+                    System.out.println("Target's name: " + selectedTarget.getTargetName());
                     System.out.println("Target's property: " + selectedTarget.getTargetProperty());
 
                     printDependsOnTargets(selectedTarget);
@@ -285,7 +287,7 @@ public class UserInteractions implements OutputInterface, InputInterface
         while (true) {
             System.out.print("Please enter the name of the " + srcOrDest + " target: ");
             targetName = scanner.nextLine();
-            target = graph.getGraphTargets().get(targetName);
+            target = graph.getTarget(targetName);
             if (target != null)
                 return target;
 
@@ -402,7 +404,7 @@ public class UserInteractions implements OutputInterface, InputInterface
 
             System.out.println("Please enter the target you would like to check if it is in the circle :");
             targetName = scanner.nextLine();
-            target = graph.getGraphTargets().get(targetName);
+            target = graph.getTarget(targetName);
 
             if (target != null) {
                 circleFinder.checkIfCircled(target);

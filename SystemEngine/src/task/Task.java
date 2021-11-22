@@ -93,6 +93,4 @@ public abstract class Task {
         }
         return returnedSet;
     }
-
-
 }

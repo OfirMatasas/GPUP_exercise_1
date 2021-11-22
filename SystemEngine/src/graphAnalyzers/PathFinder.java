@@ -4,6 +4,7 @@ import target.Graph;
 import target.Target;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Set;
 
 public class PathFinder {
@@ -13,18 +14,21 @@ public class PathFinder {
     {
         Target sourceTarget ,destinationTarget;
 
-        if(!graph.getGraphTargets().containsKey(sourceTargetName) || !graph.getGraphTargets().containsKey(destTargetName))
+        if(!graph.getGraphTargets().containsKey(sourceTargetName.toLowerCase())
+                || !graph.getGraphTargets().containsKey(destTargetName.toLowerCase()))
             return false;
 
-        sourceTarget = graph.getGraphTargets().get(sourceTargetName);
-        destinationTarget = graph.getGraphTargets().get(destTargetName);
+        sourceTarget = graph.getTarget(sourceTargetName);
+        destinationTarget = graph.getTarget(destTargetName);
 
         if (sourceTarget.getTargetProperty().equals(destinationTarget.getTargetProperty()))
         {
-            if(sourceTarget.getTargetProperty().equals(Target.TargetProperty.ROOT) || sourceTarget.getTargetProperty().equals(Target.TargetProperty.LEAF))
+            if(sourceTarget.getTargetProperty().equals(Target.TargetProperty.ROOT)
+                    || sourceTarget.getTargetProperty().equals(Target.TargetProperty.LEAF))
                 return false;
         }
-        else if(sourceTarget.getTargetProperty().equals(Target.TargetProperty.INDEPENDENT) || destinationTarget.getTargetProperty().equals(Target.TargetProperty.INDEPENDENT))
+        else if(sourceTarget.getTargetProperty().equals(Target.TargetProperty.INDEPENDENT)
+                || destinationTarget.getTargetProperty().equals(Target.TargetProperty.INDEPENDENT))
             return false;
 
         return true;
