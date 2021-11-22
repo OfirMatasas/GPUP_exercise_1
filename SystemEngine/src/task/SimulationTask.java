@@ -60,7 +60,7 @@ public class SimulationTask extends Task{
         graphSummary.getTargetsSummaryMap().get(TargetName).stopTheClock();
     }
 
-    public void executeTask(Graph graph, Boolean fromScratch, GraphSummary graphSummary, Path workingDirectory) throws OpeningFileCrash, FileNotFound {
+    public void execute(Graph graph, Boolean fromScratch, GraphSummary graphSummary, Path workingDirectory) throws OpeningFileCrash, FileNotFound {
         Path directoryPath = taskOutput.createNewDirectoryOfTaskLogs("Simulation Task", workingDirectory);
         Path filePath;
         this.graph = graph;

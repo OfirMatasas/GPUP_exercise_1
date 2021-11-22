@@ -4,7 +4,6 @@ import graphAnalyzers.PathFinder;
 import myExceptions.EmptyGraph;
 import myExceptions.NoFailedTargets;
 import myExceptions.NoGraphExisted;
-import myExceptions.WorkingDirectoryNotFound;
 import resources.checker.ResourceChecker;
 import target.Graph;
 import target.Target;
@@ -21,7 +20,7 @@ public class UserInteractions implements OutputInterface, InputInterface
     //--------------------------------------------------Members-----------------------------------------------------//
     static Scanner scanner = new Scanner(System.in);
     Graph graph;
-    Task TaskExecuting = new SimulationTask();
+    Task runningTask = new SimulationTask();
     GraphSummary graphSummary;
     static final Integer MAX_CHOICE = 9;
     private final CircleFinder circleFinder = new CircleFinder();
@@ -48,7 +47,7 @@ public class UserInteractions implements OutputInterface, InputInterface
                     case 4: { printTargetConnectionStatus(); break; }
                     case 5: {
                         incremental = askForIncremental();
-                        TaskExecuting.executeTask(graph, incremental, graphSummary, new File(workingDirectory).toPath());
+                        runningTask.execute(graph, incremental, graphSummary, new File(workingDirectory).toPath());
                         graphSummary.setFirstRun(false);
                         break;
                     }
@@ -102,9 +101,7 @@ public class UserInteractions implements OutputInterface, InputInterface
     //------------------------------------------------Option 1------------------------------------------------------//
     @Override
     public void loadFile() {
-        Boolean tryAgain = true;
-
-        while (tryAgain) {
+        while (true) {
             try {
                 System.out.println("Please enter the full path of the file you would like to load:");
                 String filePath = scanner.nextLine();
@@ -120,7 +117,11 @@ public class UserInteractions implements OutputInterface, InputInterface
             } catch (Exception ex) {
                 System.out.println(ex.getMessage());
                 System.out.println("Would you like to try again? (y/n)");
-                tryAgain = yesOrNo();
+                if(!yesOrNo())
+                {
+                    System.out.println("Returning to main menu.\n");
+                    return;
+                }
             }
         }
     }
@@ -130,6 +131,7 @@ public class UserInteractions implements OutputInterface, InputInterface
         try {
             if (graph.isEmpty()) {
                 System.out.println("The graph is empty!");
+                System.out.println("Returning to main menu.");
                 return;
             }
 
@@ -139,6 +141,7 @@ public class UserInteractions implements OutputInterface, InputInterface
             System.out.println("Number of root targets : " + graph.numberOfTargetsByProperty(Target.TargetProperty.ROOT));
             System.out.println("Number of middle targets : " + graph.numberOfTargetsByProperty(Target.TargetProperty.MIDDLE));
             System.out.println("Number of independent targets : " + graph.numberOfTargetsByProperty(Target.TargetProperty.INDEPENDENT));
+            System.out.println("Returning to main menu.\n");
         } catch (NullPointerException ex) {
             throw new NoGraphExisted();
         }
@@ -153,12 +156,12 @@ public class UserInteractions implements OutputInterface, InputInterface
                 return;
             }
 
-            Boolean tryAgain = true;
-
-            while (tryAgain) {
+            while (true)
+            {
                 if (graph.getGraphTargets().size() == 0) {
                     System.out.println("There are no targets on the graph!");
-                    System.out.println("Please load a graph from file.");
+                    System.out.println("Please load another graph from file and try again.");
+                    System.out.println("Returning to main menu.\n");
                     return;
                 }
 
@@ -174,12 +177,16 @@ public class UserInteractions implements OutputInterface, InputInterface
                     printDependsOnTargets(selectedTarget);
                     printRequiredForTargets(selectedTarget);
                     printTargetExtraInformation(selectedTarget);
-                    break;
                 }
+                else
+                    System.out.println("There's no target named " + targetName + " in graph.");
 
-                System.out.println("There's no target named " + targetName + " in graph.");
-                System.out.println("Would you like to try again? (y/n)");
-                tryAgain = yesOrNo();
+                System.out.println("Would you like check for another target (y/n)?");
+                if (!yesOrNo())
+                {
+                    System.out.println("Returning to main menu.\n");
+                    return;
+                }
             }
         } catch (NullPointerException ex) {
             throw new NoGraphExisted();
@@ -276,7 +283,10 @@ public class UserInteractions implements OutputInterface, InputInterface
 
                 System.out.println("Would you like to find other connections? (y/n)");
                 if (!yesOrNo())
+                {
+                    System.out.println("Returning to main menu.\n");
                     return;
+                }
             }
         } catch (NullPointerException ex) {
             throw new NoGraphExisted();
@@ -297,7 +307,10 @@ public class UserInteractions implements OutputInterface, InputInterface
             System.out.println("There's no " + targetName + " target in the graph.");
             System.out.println("Would you like to try again? (y/n)");
             if (!yesOrNo())
+            {
+                System.out.println("Returning to main menu.\n");
                 return null;
+            }
         }
     }
 
@@ -366,7 +379,10 @@ public class UserInteractions implements OutputInterface, InputInterface
                 System.out.println("Would you like to try again? (y/n)");
 
                 if (!yesOrNo())
+                {
+                    System.out.println("Returning to main menu.\n");
                     return;
+                }
             }
         }
     }
@@ -389,8 +405,10 @@ public class UserInteractions implements OutputInterface, InputInterface
                 System.out.println(ex.getMessage());
                 System.out.println("Would you like to try again? (y/n)");
 
-                if (!yesOrNo())
+                if (!yesOrNo()) {
+                    System.out.println("Returning to main menu.\n");
                     return;
+                }
             }
         }
     }
@@ -405,18 +423,27 @@ public class UserInteractions implements OutputInterface, InputInterface
             Target target;
             String targetName;
 
-            System.out.println("Please enter the target you would like to check if it is in the circle :");
-            targetName = scanner.nextLine();
-            target = graph.getTarget(targetName);
+            while(true) {
 
-            if (target != null) {
-                circleFinder.checkIfCircled(target);
-                if (circleFinder.getCircled())
-                    System.out.println(circleFinder.getCirclePath());
-                else
-                    System.out.println("The target " + targetName + " is not in a circle.");
-            } else
-                System.out.println("There is no " + targetName + " in the graph!");
+                System.out.println("Please enter the target you would like to check if it is in the circle :");
+                targetName = scanner.nextLine();
+                target = graph.getTarget(targetName);
+
+                if (target != null) {
+                    circleFinder.checkIfCircled(target);
+                    if (circleFinder.getCircled())
+                        System.out.println(circleFinder.getCirclePath());
+                    else
+                        System.out.println("The target " + targetName + " is not in a circle.");
+                } else
+                    System.out.println("There is no " + targetName + " in the graph!");
+
+                System.out.println("Would you like to check for more circles (y/n)?");
+                if(!yesOrNo()) {
+                    System.out.println("Returning to main menu.\n");
+                    return;
+                }
+            }
         } catch (NullPointerException ex) {
             throw new NoGraphExisted();
         }

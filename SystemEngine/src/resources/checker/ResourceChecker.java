@@ -22,7 +22,7 @@ public class ResourceChecker
 
     private enum DependencyType { requiredFor, dependsOn};
 
-    public Graph extractFromXMLToGraph(Path path) throws NotXMLFile, FileNotFound, DoubledTarget, InvalidConnectionBetweenTargets, EmptyGraph, IOException, WorkingDirectoryNotFound, NotDirectory {
+    public Graph extractFromXMLToGraph(Path path) throws NotXMLFile, FileNotFound, DoubledTarget, InvalidConnectionBetweenTargets, EmptyGraph, IOException, NotDirectory {
         if(!path.getFileName().toString().endsWith(".xml"))
             throw new NotXMLFile(path.getFileName().toString());
         else if(!Files.isExecutable(path))
