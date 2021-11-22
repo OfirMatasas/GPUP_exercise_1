@@ -4,6 +4,7 @@ import graphAnalyzers.PathFinder;
 import myExceptions.EmptyGraph;
 import myExceptions.NoFailedTargets;
 import myExceptions.NoGraphExisted;
+import myExceptions.WorkingDirectoryNotFound;
 import resources.checker.ResourceChecker;
 import target.Graph;
 import target.Target;
@@ -26,7 +27,7 @@ public class UserInteractions implements OutputInterface, InputInterface
     private final CircleFinder circleFinder = new CircleFinder();
     private final PathFinder pathFinder = new PathFinder();
     private final ResourceChecker resourceChecker = new ResourceChecker();
-    private Path xmlFilePath;
+    private String workingDirectory;
 
     //----------------------------------------------------Menu------------------------------------------------------//
     public void SystemExecute() {
@@ -47,7 +48,7 @@ public class UserInteractions implements OutputInterface, InputInterface
                     case 4: { printTargetConnectionStatus(); break; }
                     case 5: {
                         incremental = askForIncremental();
-                        TaskExecuting.executeTask(graph, incremental, graphSummary, xmlFilePath);
+                        TaskExecuting.executeTask(graph, incremental, graphSummary, new File(workingDirectory).toPath());
                         graphSummary.setFirstRun(false);
                         break;
                     }
@@ -109,8 +110,10 @@ public class UserInteractions implements OutputInterface, InputInterface
                 String filePath = scanner.nextLine();
                 filePath = filePath.trim();
 
-                xmlFilePath = Paths.get(filePath);
+                Path xmlFilePath = Paths.get(filePath);
                 graph = resourceChecker.extractFromXMLToGraph(xmlFilePath);
+                workingDirectory = resourceChecker.getWorkingDirectoryPath();
+
                 System.out.println("Graph " + graph.getGraphName() + " loaded successfully from " + xmlFilePath.getFileName().toString() + " !");
                 graphSummary = new GraphSummary(graph);
                 return;

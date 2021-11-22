@@ -10,15 +10,19 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.NotDirectoryException;
 import java.nio.file.Path;
 import java.util.*;
 
-public class ResourceChecker{
+public class ResourceChecker
+{
+    private String workingDirectoryString;
 
     private enum DependencyType { requiredFor, dependsOn};
 
-    public Graph extractFromXMLToGraph(Path path) throws NotXMLFile, FileNotFound, DoubledTarget, InvalidConnectionBetweenTargets, EmptyGraph {
+    public Graph extractFromXMLToGraph(Path path) throws NotXMLFile, FileNotFound, DoubledTarget, InvalidConnectionBetweenTargets, EmptyGraph, IOException, WorkingDirectoryNotFound, NotDirectory {
         if(!path.getFileName().toString().endsWith(".xml"))
             throw new NotXMLFile(path.getFileName().toString());
         else if(!Files.isExecutable(path))
@@ -28,8 +32,7 @@ public class ResourceChecker{
         GPUPDescriptor descriptor = fromXmlFileToObject(path);
         Graph graph = checkResource(descriptor);
 
-        if(graph != null)
-            graph.calculateProperties();
+        graph.calculateProperties();
 
         return graph;
     }
@@ -53,12 +56,20 @@ public class ResourceChecker{
         return descriptor;
     }
 
-    private Graph checkResource(GPUPDescriptor descriptor) throws InvalidConnectionBetweenTargets, DoubledTarget, EmptyGraph {
+    private Graph checkResource(GPUPDescriptor descriptor) throws InvalidConnectionBetweenTargets, DoubledTarget, EmptyGraph, IOException, NotDirectory {
         List<GPUPTarget> gpupTargetsAsList = descriptor.getGPUPTargets().getGPUPTarget();
         Graph graph = FillTheGraphWithTargets(gpupTargetsAsList);
         graph.setGraphName(descriptor.getGPUPConfiguration().getGPUPGraphName());
         Target currentTarget, secondTarget;
         String currentTargetName, secondTargetName;
+
+        workingDirectoryString = descriptor.getGPUPConfiguration().getGPUPWorkingDirectory();
+        Path workingDirectoryPath = new File(workingDirectoryString).toPath();
+
+        if(!Files.exists(workingDirectoryPath))
+            Files.createDirectories(workingDirectoryPath);
+        else if(!Files.isDirectory(workingDirectoryPath))
+            throw new NotDirectory(workingDirectoryString);
 
         if(descriptor.getGPUPTargets() == null || descriptor.getGPUPTargets().getGPUPTarget() == null)
             throw new EmptyGraph();
@@ -135,5 +146,10 @@ public class ResourceChecker{
             }
         }
         return true;
+    }
+
+    public String getWorkingDirectoryPath()
+    {
+        return workingDirectoryString;
     }
 }

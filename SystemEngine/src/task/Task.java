@@ -15,6 +15,7 @@ public abstract class Task {
     protected TaskOutput taskOutput;
     protected Graph graph;
     protected GraphSummary graphSummary;
+    protected Path workingDirectory;
 
     //------------------------------------------------Constructors--------------------------------------------------//
     public Task() {
@@ -38,6 +39,7 @@ public abstract class Task {
         this.targetsParameters = new HashMap<>();
     }
 
+    public void setWorkingDirectory(Path workingDirectory) { this.workingDirectory = workingDirectory; }
     //----------------------------------------------Abstract Methods------------------------------------------------//
     abstract public void executeTaskOnTarget(Target target);
 

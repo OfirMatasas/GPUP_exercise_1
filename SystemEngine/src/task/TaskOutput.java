@@ -158,8 +158,8 @@ public class TaskOutput
         }
     }
 
-    public Path createNewDirectoryOfTaskLogs(String taskName, Path xmlFilePath) throws OpeningFileCrash {
-        directoryPath = xmlFilePath.getParent().toString();
+    public Path createNewDirectoryOfTaskLogs(String taskName, Path workingDirectory) throws OpeningFileCrash {
+        directoryPath = workingDirectory.toString();
         SimpleDateFormat formatter = new SimpleDateFormat("dd.MM.yyyy HH.mm.ss");
         Date date = new Date();
 

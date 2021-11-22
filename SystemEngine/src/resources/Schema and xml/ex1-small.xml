@@ -1,7 +1,7 @@
 <GPUP-Descriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="G.P.U.P-V1.xsd">
 	<GPUP-Configuration>
 		<GPUP-Graph-Name>Test</GPUP-Graph-Name>
-		<GPUP-Working-Directory>c:\temp</GPUP-Working-Directory>
+		<GPUP-Working-Directory>C:\temp</GPUP-Working-Directory>
 	</GPUP-Configuration>
 	<GPUP-Targets>
 		<GPUP-Target name="A">
