@@ -11,6 +11,7 @@ import graphAnalyzers.CircleFinder;
 import task.SimulationTask;
 import task.Task;
 import java.io.*;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
@@ -330,14 +331,37 @@ public class UserInteractions implements OutputInterface, InputInterface
         if (checkForExistedOrEmptyGraph()) return;
 
         while (true) {
-            System.out.println("Enter the absolute path of the file you'd like to save the system to: ");
+            System.out.println("Enter the absolute path of a file you would like to save the system to: ");
+            System.out.println("(Make sure the directory of the file is already existed)");
             String savePath = scanner.nextLine();
+            Path filePath = Paths.get(savePath);
+            Boolean invalid = true;
+            String errorMessage = null;
+
+            if(!Files.exists(filePath.getParent()))
+                errorMessage = "Invalid path: directory not existed." +
+                        "Would you like to try again (y/n)?";
+            else if(Files.isDirectory(filePath))
+                errorMessage = "Invalid file:\n" + savePath + " is a path to a directory." +
+                        "Would you like to try again (y/n)?";
+            else if(Files.exists(filePath))
+                errorMessage = "The file " + filePath.getFileName() +
+                        " is already exist.\nWould you like to overwrite (y/n)?";
+            else invalid = false;
+
+            if(invalid)
+            {
+                System.out.println(errorMessage);
+                if (!yesOrNo()) {
+                    System.out.println("Returning to main menu.\n");
+                    return;
+                }
+                continue;
+            }
 
             try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(savePath))) {
                 out.writeObject(graph);
                 out.writeObject(graphSummary);
-                out.flush();
-                out.close();
 
                 //Check if the saving succeeded
                 System.out.println("File saved successfully!");
@@ -358,9 +382,34 @@ public class UserInteractions implements OutputInterface, InputInterface
     //------------------------------------------------Option 8------------------------------------------------------//
     @Override
     public void loadSystemStatus() {
-        while (true) {
-            System.out.println("Enter the absolute path of the file you'd like to load: ");
+        while (true)
+        {
+            System.out.println("Enter the absolute path of the file you would like to load: ");
             String loadPath = scanner.nextLine();
+            Path filePath = Paths.get(loadPath);
+            String errorMessage = null;
+            Boolean invalid = true;
+
+            if(!Files.exists(filePath.getParent()))
+                errorMessage = "Invalid path: directory not existed.\n" +
+                        "Would you like to try again (y/n)?";
+            else if(!Files.exists(filePath))
+                errorMessage = "Invalid path: file not existed.\n" +
+                        "Would you like to try again (y/n)?";
+            else if(Files.isDirectory(filePath))
+                errorMessage = "Invalid file:\\n\" + loadPath + \" is a path to a directory.\n" +
+                "Would you like to try again (y/n)?";
+            else invalid = false;
+
+            if(invalid)
+            {
+                System.out.println(errorMessage);
+                if (!yesOrNo()) {
+                    System.out.println("Returning to main menu.\n");
+                    return;
+                }
+                continue;
+            }
 
             try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(loadPath))) {
                 graph = (Graph) in.readObject();
@@ -369,7 +418,17 @@ public class UserInteractions implements OutputInterface, InputInterface
                 //Check if the loading succeeded
                 System.out.println("Loaded " + graphSummary.getGraphName() + " graph successfully from file!");
                 return;
-            } catch (Exception ex) {
+            }
+            catch(StreamCorruptedException ex)
+            {
+                System.out.println("The file does not contain any graph!");
+                System.out.println("Would you like to try again (y/n)?");
+                if (!yesOrNo()) {
+                    System.out.println("Returning to main menu.\n");
+                    return;
+                }
+            }
+            catch (Exception ex) {
                 System.out.println(ex.getMessage());
                 System.out.println("Would you like to try again? (y/n)");
 
