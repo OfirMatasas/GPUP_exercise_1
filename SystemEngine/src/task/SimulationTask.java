@@ -2,6 +2,7 @@ package task;
 
 import myExceptions.FileNotFound;
 import myExceptions.OpeningFileCrash;
+import sun.util.resources.cldr.ur.CalendarData_ur_IN;
 import target.Graph;
 import target.Target;
 import userInterface.GraphSummary;
@@ -14,6 +15,8 @@ import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -27,6 +30,7 @@ public class SimulationTask extends Task{
         targetSummary.startTheClock();
         targetSummary.setRuntimeStatus(TargetSummary.RuntimeStatus.InProcess);
         String TargetName = target.getTargetName();
+        long sleepingTime = targetSummary.getPredictedTime().toMillis();
 
         Double result = Math.random();
 
@@ -52,7 +56,7 @@ public class SimulationTask extends Task{
 
         //Going to sleep
         try {
-            Thread.sleep(getTargetsParameters().get(target).getProcessingTime().toMillis());
+            Thread.sleep(sleepingTime);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -75,6 +79,8 @@ public class SimulationTask extends Task{
             //Update target parameters
             updateTaskParameters(taskParameters);
         }
+        else
+            graphSummary.changePredictedTime(graph, targetsParameters);
 
         //Make a set of executable targets
         Set<Target> executableTargets = makeExecutableTargetsSet(fromScratch);
@@ -156,15 +162,31 @@ public class SimulationTask extends Task{
     {
         Target currentTarget;
         String currentTargetName;
+        Boolean isRandom = taskParameters.isRandom();
+        TaskParameters currentTaskParameters;
+        long timeLong;
+        Duration timeDuration, originalTime = TaskParameters.getProcessingTime();
+        Double successRate = taskParameters.getSuccessRate();
+        Double successRateWithWarnings = taskParameters.getSuccessWithWarnings();
+
         makeNewTargetParameters();
 
         for(TargetSummary currentTargetSummary : graphSummary.getTargetsSummaryMap().values())
         {
             currentTargetName = currentTargetSummary.getTargetName();
             currentTarget = graph.getTarget(currentTargetName);
+            timeDuration = originalTime;
 
-            getTargetParameters().put(currentTarget, taskParameters);
-            currentTargetSummary.setPredictedTime(taskParameters.getProcessingTime());
+            if(isRandom)
+            {
+                timeLong = (long)(Math.random() * (originalTime.toMillis())) + 1;
+                timeDuration = Duration.of(timeLong, ChronoUnit.MILLIS);
+            }
+
+            currentTaskParameters = new TaskParameters(timeDuration, isRandom, successRate, successRateWithWarnings);
+
+            currentTargetSummary.setPredictedTime(timeDuration);
+            targetsParameters.put(currentTarget, currentTaskParameters);
         }
     }
 

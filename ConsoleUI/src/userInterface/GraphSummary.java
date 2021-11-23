@@ -2,9 +2,12 @@ package userInterface;
 
 import target.Graph;
 import target.Target;
+import task.TaskParameters;
+
 import java.io.Serializable;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -133,5 +136,26 @@ public class GraphSummary implements Serializable {
         this.allResultStatus.put(TargetSummary.ResultStatus.Success, succeeded);
         this.allResultStatus.put(TargetSummary.ResultStatus.Failure, failed - this.skippedTargets);
         this.allResultStatus.put(TargetSummary.ResultStatus.Warning, warning);
+    }
+
+    public void changePredictedTime(Graph graph, Map<Target, TaskParameters> targetsParameters) {
+        Target currentTarget;
+        Long timeLong;
+        Duration timeDuration, originalTime = TaskParameters.getProcessingTime();
+        TaskParameters currentTaskParameters;
+
+        for(TargetSummary currentTargetSummary : targetsSummaryMap.values())
+        {
+            currentTarget = graph.getTarget(currentTargetSummary.getTargetName());
+            currentTaskParameters = targetsParameters.get(currentTarget);
+            timeDuration = originalTime;
+
+            if(targetsParameters.get(currentTarget).isRandom())
+            {
+                timeLong = (long)(Math.random() * (originalTime.toMillis())) + 1;
+                timeDuration = Duration.of(timeLong, ChronoUnit.MILLIS);
+                currentTargetSummary.setPredictedTime(timeDuration);
+            }
+        }
     }
 }

@@ -3,17 +3,24 @@ package task;
 import java.time.Duration;
 
 public class TaskParameters {
-    private Duration processingTime;
+    private static Duration processingTime;
     private Boolean isRandom;
     private Double successRate, successWithWarnings;
 
     public TaskParameters() {
-        this.processingTime = null;
+        processingTime = null;
         this.isRandom = false;
         this.successRate = this.successWithWarnings = 0.0;
     }
 
-    public Duration getProcessingTime() {
+    public TaskParameters(Duration processingTime, Boolean isRandom, Double successRate, Double successWithWarnings) {
+        TaskParameters.processingTime = processingTime;
+        this.isRandom = isRandom;
+        this.successRate = successRate;
+        this.successWithWarnings = successWithWarnings;
+    }
+
+    static public Duration getProcessingTime() {
         return processingTime;
     }
 
@@ -42,6 +49,6 @@ public class TaskParameters {
     }
 
     public void setProcessingTime(Duration processingTime) {
-        this.processingTime = processingTime;
+        TaskParameters.processingTime = processingTime;
     }
 }
