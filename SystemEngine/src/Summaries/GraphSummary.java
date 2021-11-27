@@ -1,9 +1,8 @@
-package userInterface;
+package Summaries;
 
 import target.Graph;
 import target.Target;
 import task.TaskParameters;
-
 import java.io.Serializable;
 import java.time.Duration;
 import java.time.Instant;
@@ -20,15 +19,25 @@ public class GraphSummary implements Serializable {
     private Map<TargetSummary.ResultStatus, Integer> allResultStatus;
     private Boolean firstRun;
     private Integer skippedTargets;
+    private String workingDirectory;
 
     //------------------------------------------------Constructors--------------------------------------------------//
-    public GraphSummary(Graph graph) {
+    public GraphSummary(Graph graph, String workingDirectory) {
         this.targetsSummaryMap = new HashMap<>();
         this.firstRun = true;
         this.graphName = graph.getGraphName();
+        this.workingDirectory = workingDirectory;
+        TargetSummary currentTargetSummary;
 
         for(Target currentTarget : graph.getGraphTargets().values())
-            this.targetsSummaryMap.put(currentTarget.getTargetName(), new TargetSummary(currentTarget.getTargetName()));
+        {
+            currentTargetSummary = new TargetSummary(currentTarget.getTargetName());
+
+            if(currentTarget.getTargetProperty().equals(Target.TargetProperty.ROOT))
+                currentTargetSummary.setRoot(true);
+
+            this.targetsSummaryMap.put(currentTarget.getTargetName(), currentTargetSummary);
+        }
     }
 
     //--------------------------------------------------Getters-----------------------------------------------------//
@@ -53,6 +62,8 @@ public class GraphSummary implements Serializable {
     }
 
     public Integer getSkippedTargets() { return this.skippedTargets; }
+
+    public String getWorkingDirectory() { return workingDirectory; }
 
     //--------------------------------------------------Setters-----------------------------------------------------//
     public void setFirstRun(Boolean firstRun) {

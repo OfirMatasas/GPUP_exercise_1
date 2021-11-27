@@ -2,11 +2,10 @@ package task;
 
 import myExceptions.FileNotFound;
 import myExceptions.OpeningFileCrash;
-import sun.util.resources.cldr.ur.CalendarData_ur_IN;
 import target.Graph;
 import target.Target;
-import userInterface.GraphSummary;
-import userInterface.TargetSummary;
+import Summaries.GraphSummary;
+import Summaries.TargetSummary;
 import userInterface.TaskRequirements;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -64,8 +63,8 @@ public class SimulationTask extends Task{
         graphSummary.getTargetsSummaryMap().get(TargetName).stopTheClock();
     }
 
-    public void execute(Graph graph, Boolean fromScratch, GraphSummary graphSummary, Path workingDirectory) throws OpeningFileCrash, FileNotFound {
-        Path directoryPath = taskOutput.createNewDirectoryOfTaskLogs("Simulation Task", workingDirectory);
+    public void execute(Graph graph, Boolean fromScratch, GraphSummary graphSummary) throws OpeningFileCrash, FileNotFound {
+        Path directoryPath = taskOutput.createNewDirectoryOfTaskLogs("Simulation Task", Paths.get(graphSummary.getWorkingDirectory()));
         Path filePath;
         this.graph = graph;
         this.graphSummary = graphSummary;
@@ -200,6 +199,7 @@ public class SimulationTask extends Task{
         {
             currentTargetSummary = graphSummary.getTargetsSummaryMap().get(currentTarget.getTargetName());
 
+            //Starting all over again, starting from leaves and independents
             if(fromScratch)
             {
                 Target.TargetProperty prop = currentTarget.getTargetProperty();
@@ -209,10 +209,13 @@ public class SimulationTask extends Task{
                 {
                     executableTargets.add(currentTarget);
                     graphSummary.setRunningTargets(currentTarget, true);
+
+                    //Need to set all targets above as frozen
+                    currentTargetSummary.setAllRequiredForTargetsRuntimeStatus(currentTarget, graphSummary, TargetSummary.RuntimeStatus.Frozen);
                 }
             }
             else
-            { //Starting from last stop
+            { //Starting from last stop, only those who failed the last run (but not skipped)
                 if(currentTargetSummary.getResultStatus().equals(TargetSummary.ResultStatus.Failure)
                 && !graphSummary.getTargetsSummaryMap().get(currentTarget.getTargetName()).isSkipped())
                 {

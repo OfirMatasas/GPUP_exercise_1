@@ -3,9 +3,8 @@ package task;
 import myExceptions.*;
 import target.Graph;
 import target.Target;
-import userInterface.GraphSummary;
-import userInterface.TargetSummary;
-import java.nio.file.Path;
+import Summaries.GraphSummary;
+import Summaries.TargetSummary;
 import java.util.*;
 
 public abstract class Task {
@@ -15,7 +14,6 @@ public abstract class Task {
     protected TaskOutput taskOutput;
     protected Graph graph;
     protected GraphSummary graphSummary;
-    protected Path workingDirectory;
 
     //------------------------------------------------Constructors--------------------------------------------------//
     public Task() {
@@ -29,20 +27,17 @@ public abstract class Task {
         return this.targetsParameters;
     }
 
-    public Map<Target, TaskParameters> getTargetsParameters() {
-        return targetsParameters;
-    }
-
     //--------------------------------------------------Setters-----------------------------------------------------//
     public void makeNewTargetParameters()
     {
         this.targetsParameters = new HashMap<>();
     }
+    public void setTargetsParameters(Map<Target, TaskParameters> targetsParameters) {this.targetsParameters = targetsParameters;}
 
     //----------------------------------------------Abstract Methods------------------------------------------------//
     abstract public void executeTaskOnTarget(Target target);
 
-    abstract public void execute(Graph graph, Boolean fromScratch, GraphSummary graphSummary, Path xmlFilePath) throws OpeningFileCrash, FileNotFound, NoFailedTargets;
+    abstract public void execute(Graph graph, Boolean fromScratch, GraphSummary graphSummary) throws OpeningFileCrash, FileNotFound, NoFailedTargets;
 
     abstract public Set<Target> makeExecutableTargetsSet(Boolean fromScratch);
 
@@ -56,6 +51,7 @@ public abstract class Task {
             currentTargetSummary = graphSummary.getTargetsSummaryMap().get(currentTarget.getTargetName());
 
             currentTargetSummary.setRunning(false);
+            currentTargetSummary.setOpenedTargetsToZero();
         }
 
         graphSummary.setSkippedTargetsToZero();

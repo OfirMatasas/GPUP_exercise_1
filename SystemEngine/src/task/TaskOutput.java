@@ -1,7 +1,7 @@
 package task;
 
-import userInterface.GraphSummary;
-import userInterface.TargetSummary;
+import Summaries.GraphSummary;
+import Summaries.TargetSummary;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -73,7 +73,8 @@ public class TaskOutput
             }
 
             //Output the new skipped targets after current execution
-            if(!targetSummary.isSkipped() && targetSummary.getResultStatus().equals(TargetSummary.ResultStatus.Failure))
+            if(!targetSummary.isSkipped() && targetSummary.getResultStatus().equals(TargetSummary.ResultStatus.Failure)
+                && !targetSummary.getRoot())
             {
                 os.write("Targets that have been skipped: ".getBytes(StandardCharsets.UTF_8));
                 for(String skippedTargetName : targetSummary.getSkippedTargets())

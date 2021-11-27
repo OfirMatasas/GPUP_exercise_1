@@ -1,5 +1,7 @@
 package userInterface;
 
+import Summaries.GraphSummary;
+import Summaries.TargetSummary;
 import graphAnalyzers.PathFinder;
 import myExceptions.EmptyGraph;
 import myExceptions.NoFailedTargets;
@@ -20,14 +22,10 @@ public class UserInteractions implements OutputInterface, InputInterface
 {
     //--------------------------------------------------Members-----------------------------------------------------//
     static Scanner scanner = new Scanner(System.in);
-    Graph graph;
-    Task runningTask = new SimulationTask();
-    GraphSummary graphSummary;
     static final Integer MAX_CHOICE = 9;
-    private final CircleFinder circleFinder = new CircleFinder();
-    private final PathFinder pathFinder = new PathFinder();
-    private final ResourceChecker resourceChecker = new ResourceChecker();
-    private String workingDirectory;
+    Task runningTask = new SimulationTask();
+    Graph graph;
+    GraphSummary graphSummary;
 
     //----------------------------------------------------Menu------------------------------------------------------//
     public void SystemExecute() {
@@ -48,15 +46,15 @@ public class UserInteractions implements OutputInterface, InputInterface
                     case 4: { printTargetConnectionStatus(); break; }
                     case 5: {
                         incremental = askForIncremental();
-                        runningTask.execute(graph, incremental, graphSummary, new File(workingDirectory).toPath());
+                        runningTask.execute(graph, incremental, graphSummary);
                         graphSummary.setFirstRun(false);
+                        System.out.println("\nReturning to main menu.\n");
                         break;
                     }
                     case 6: { exitFromSystem(); break; }
                     case 7: { saveSystemStatus(); break; }
                     case 8: { loadSystemStatus(); break; }
                     case 9: { checkIfTargetContainedInACircle(); break; }
-                    default: { System.out.println("Please enter an option between 1-" + MAX_CHOICE + "!\n"); break; }
                 }
             } catch (Exception ex) {
                 System.out.println(ex.getMessage());
@@ -93,7 +91,8 @@ public class UserInteractions implements OutputInterface, InputInterface
                     return selection;
                 System.out.println("Please choose between 1 and " + UserInteractions.MAX_CHOICE + ".");
             } catch (InputMismatchException ex) {
-                System.out.println("Please enter an integer between 1 and " + UserInteractions.MAX_CHOICE + ".");
+                System.out.println("Please enter an integer between 1 and " + UserInteractions.MAX_CHOICE + ".\n");
+                printMenu();
                 scanner.nextLine();
             }
         }
@@ -104,23 +103,25 @@ public class UserInteractions implements OutputInterface, InputInterface
     public void loadXMLFile() {
         while (true) {
             try {
-                System.out.println("Please enter the full path of the xml file you would like to load:");
+                System.out.println("\nPlease enter the full path of the xml file you would like to load:");
                 String filePath = scanner.nextLine();
                 filePath = filePath.trim();
+                ResourceChecker resourceChecker = new ResourceChecker();
 
                 Path xmlFilePath = Paths.get(filePath);
                 graph = resourceChecker.extractFromXMLToGraph(xmlFilePath);
-                workingDirectory = resourceChecker.getWorkingDirectoryPath();
 
                 System.out.println("Graph " + graph.getGraphName() + " loaded successfully from " + xmlFilePath.getFileName().toString() + " !");
-                graphSummary = new GraphSummary(graph);
+                graphSummary = new GraphSummary(graph,resourceChecker.getWorkingDirectoryPath());
+                runningTask.setTargetsParameters(null);
+                System.out.println("\nReturning to main menu.\n");
                 return;
             } catch (Exception ex) {
                 System.out.println(ex.getMessage());
                 System.out.println("Would you like to try again? (y/n)");
                 if(!yesOrNo())
                 {
-                    System.out.println("Returning to main menu.\n");
+                    System.out.println("\nReturning to main menu.\n");
                     return;
                 }
             }
@@ -132,12 +133,13 @@ public class UserInteractions implements OutputInterface, InputInterface
         if (checkForExistedOrEmptyGraph()) return;
 
         Map<String, Target> graphTargets = graph.getGraphTargets();
-        System.out.println("Number of targets : " + graphTargets.size());
-        System.out.println("Number of leaf targets : " + graph.numberOfTargetsByProperty(Target.TargetProperty.LEAF));
-        System.out.println("Number of root targets : " + graph.numberOfTargetsByProperty(Target.TargetProperty.ROOT));
-        System.out.println("Number of middle targets : " + graph.numberOfTargetsByProperty(Target.TargetProperty.MIDDLE));
-        System.out.println("Number of independent targets : " + graph.numberOfTargetsByProperty(Target.TargetProperty.INDEPENDENT));
-        System.out.println("Returning to main menu.\n");
+        System.out.println("\nGraph " + graph.getGraphName() + " details:");
+        System.out.println("Number of targets: " + graphTargets.size());
+        System.out.println("Number of leaf targets: " + graph.numberOfTargetsByProperty(Target.TargetProperty.LEAF));
+        System.out.println("Number of root targets: " + graph.numberOfTargetsByProperty(Target.TargetProperty.ROOT));
+        System.out.println("Number of middle targets: " + graph.numberOfTargetsByProperty(Target.TargetProperty.MIDDLE));
+        System.out.println("Number of independent targets: " + graph.numberOfTargetsByProperty(Target.TargetProperty.INDEPENDENT));
+        System.out.println("\nReturning to main menu.\n");
     }
 
     //------------------------------------------------Option 3------------------------------------------------------//
@@ -148,7 +150,7 @@ public class UserInteractions implements OutputInterface, InputInterface
 
         while (true)
         {
-            System.out.print("Enter target's name: ");
+            System.out.print("\nEnter target's name: ");
             String targetName = scanner.next();
             Target selectedTarget = graph.getTarget(targetName);
 
@@ -164,10 +166,10 @@ public class UserInteractions implements OutputInterface, InputInterface
             else
                 System.out.println("There's no target named " + targetName + " in graph.");
 
-            System.out.println("Would you like check for another target (y/n)?");
+            System.out.println("\nWould you like check for another target (y/n)?");
             if (!yesOrNo())
             {
-                System.out.println("Returning to main menu.\n");
+                System.out.println("\nReturning to main menu.\n");
                 return;
             }
         }
@@ -210,11 +212,13 @@ public class UserInteractions implements OutputInterface, InputInterface
     public void printTargetConnectionStatus() {
         if (checkForExistedOrEmptyGraph()) return;
 
+        PathFinder pathFinder = new PathFinder();
         String sourceTargetName, destTargetName;
         Target sourceTarget, destTarget;
         Target.Connection connection;
         Character connectionChoice;
 
+        System.out.println();
         while (true) {
             sourceTarget = getTargetFromUser("source");
             if (sourceTarget == null)
@@ -257,11 +261,12 @@ public class UserInteractions implements OutputInterface, InputInterface
                 }
             }
 
-            System.out.println("Would you like to find other connections? (y/n)");
+            System.out.println("\nWould you like to find other connections? (y/n)");
             if (!yesOrNo()) {
-                System.out.println("Returning to main menu.\n");
+                System.out.println("\nReturning to main menu.\n");
                 return;
             }
+
         }
     }
 
@@ -277,10 +282,10 @@ public class UserInteractions implements OutputInterface, InputInterface
                 return target;
 
             System.out.println("There's no " + targetName + " target in the graph.");
-            System.out.println("Would you like to try again? (y/n)");
+            System.out.println("\nWould you like to try another target? (y/n)");
             if (!yesOrNo())
             {
-                System.out.println("Returning to main menu.\n");
+                System.out.println("\nReturning to main menu.\n");
                 return null;
             }
         }
@@ -295,15 +300,14 @@ public class UserInteractions implements OutputInterface, InputInterface
 
         if (graphSummary.getFirstRun())
         { //Making a brand-new graph summary for first run
-            graphSummary = new GraphSummary(graph);
             return true;
         }
 
-        System.out.println("Would you like to start from scratch? (y/n)");
+        System.out.println("\nWould you like to start from scratch? (y/n)");
         Boolean fromScratch = yesOrNo();
 
         if (fromScratch)
-            graphSummary = new GraphSummary(graph);
+            graphSummary = new GraphSummary(graph, graphSummary.getWorkingDirectory());
         else
         {
             //If all the targets in the graph are already succeeded - no need for running a new task
@@ -321,7 +325,9 @@ public class UserInteractions implements OutputInterface, InputInterface
 
     //------------------------------------------------Option 6------------------------------------------------------//
     @Override
-    public void exitFromSystem() {
+    public void exitFromSystem()
+    {
+        System.out.println("Exiting the project...");
         System.exit(0);
     }
 
@@ -331,19 +337,17 @@ public class UserInteractions implements OutputInterface, InputInterface
         if (checkForExistedOrEmptyGraph()) return;
 
         while (true) {
-            System.out.println("Enter the absolute path of a file you would like to save the system to: ");
-            System.out.println("(Make sure the directory of the file is already existed)");
+            System.out.println("\nEnter the name of the file you would like to save: ");
+            System.out.println("(If entered the file's name only, the file will be saved in the application folder)");
+            System.out.println("(If entered full path, Make sure the directory of the file is already existed)");
             String savePath = scanner.nextLine();
             Path filePath = Paths.get(savePath);
             Boolean invalid = true;
             String errorMessage = null;
 
-            if(!Files.exists(filePath.getParent()))
-                errorMessage = "Invalid path: directory not existed." +
-                        "Would you like to try again (y/n)?";
-            else if(Files.isDirectory(filePath))
-                errorMessage = "Invalid file:\n" + savePath + " is a path to a directory." +
-                        "Would you like to try again (y/n)?";
+            if(Files.isDirectory(filePath))
+                errorMessage = "Invalid file: " + savePath +" is a path to a directory." +
+                        "\nWould you like to try again (y/n)?";
             else if(Files.exists(filePath))
                 errorMessage = "The file " + filePath.getFileName() +
                         " is already exist.\nWould you like to overwrite (y/n)?";
@@ -353,10 +357,9 @@ public class UserInteractions implements OutputInterface, InputInterface
             {
                 System.out.println(errorMessage);
                 if (!yesOrNo()) {
-                    System.out.println("Returning to main menu.\n");
+                    System.out.println("\nReturning to main menu.\n");
                     return;
                 }
-                continue;
             }
 
             try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(savePath))) {
@@ -365,6 +368,7 @@ public class UserInteractions implements OutputInterface, InputInterface
 
                 //Check if the saving succeeded
                 System.out.println("File saved successfully!");
+                System.out.println("\nReturning to main menu.\n");
                 return;
             } catch (IOException ex) {
                 System.out.println(ex.getMessage());
@@ -372,7 +376,7 @@ public class UserInteractions implements OutputInterface, InputInterface
 
                 if (!yesOrNo())
                 {
-                    System.out.println("Returning to main menu.\n");
+                    System.out.println("\nReturning to main menu.\n");
                     return;
                 }
             }
@@ -384,28 +388,28 @@ public class UserInteractions implements OutputInterface, InputInterface
     public void loadSystemStatus() {
         while (true)
         {
-            System.out.println("Enter the absolute path of the file you would like to load: ");
+            System.out.println("\nEnter the name of the file (that you've saved before) you would like to load: ");
+            System.out.println("(If entered the file's name only, the system will try to load the file from the current folder)");
+            System.out.println("(If entered full path, Make sure the file and the directory of the file are already existed)");
             String loadPath = scanner.nextLine();
             Path filePath = Paths.get(loadPath);
             String errorMessage = null;
             Boolean invalid = true;
 
-            if(!Files.exists(filePath.getParent()))
-                errorMessage = "Invalid path: directory not existed.\n" +
-                        "Would you like to try again (y/n)?";
-            else if(!Files.exists(filePath))
+
+            if(!Files.exists(filePath))
                 errorMessage = "Invalid path: file not existed.\n" +
                         "Would you like to try again (y/n)?";
             else if(Files.isDirectory(filePath))
-                errorMessage = "Invalid file:\\n\" + loadPath + \" is a path to a directory.\n" +
-                "Would you like to try again (y/n)?";
+                errorMessage = "Invalid file : " + loadPath + " is a path to a directory.\n" +
+                        "Would you like to try again (y/n)?";
             else invalid = false;
 
             if(invalid)
             {
                 System.out.println(errorMessage);
                 if (!yesOrNo()) {
-                    System.out.println("Returning to main menu.\n");
+                    System.out.println("\nReturning to main menu.\n");
                     return;
                 }
                 continue;
@@ -414,26 +418,27 @@ public class UserInteractions implements OutputInterface, InputInterface
             try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(loadPath))) {
                 graph = (Graph) in.readObject();
                 graphSummary = (GraphSummary) in.readObject();
-
                 //Check if the loading succeeded
                 System.out.println("Loaded " + graphSummary.getGraphName() + " graph successfully from file!");
+                System.out.println("\nReturning to main menu.\n");
+                runningTask.setTargetsParameters(null);
                 return;
             }
             catch(StreamCorruptedException ex)
             {
                 System.out.println("The file does not contain any graph!");
-                System.out.println("Would you like to try again (y/n)?");
+                System.out.println("\nWould you like to try again (y/n)?");
                 if (!yesOrNo()) {
-                    System.out.println("Returning to main menu.\n");
+                    System.out.println("\nReturning to main menu.\n");
                     return;
                 }
             }
             catch (Exception ex) {
                 System.out.println(ex.getMessage());
-                System.out.println("Would you like to try again? (y/n)");
+                System.out.println("\nWould you like to try again? (y/n)");
 
                 if (!yesOrNo()) {
-                    System.out.println("Returning to main menu.\n");
+                    System.out.println("\nReturning to main menu.\n");
                     return;
                 }
             }
@@ -446,10 +451,11 @@ public class UserInteractions implements OutputInterface, InputInterface
 
         Target target;
         String targetName;
+        CircleFinder circleFinder = new CircleFinder();
 
         while(true) {
 
-            System.out.println("Please enter the target you would like to check if it is in the circle :");
+            System.out.println("\nPlease enter the target you would like to check if it is in the circle:");
             targetName = scanner.nextLine();
             target = graph.getTarget(targetName);
 
@@ -462,9 +468,9 @@ public class UserInteractions implements OutputInterface, InputInterface
             } else
                 System.out.println("There is no " + targetName + " in the graph!");
 
-            System.out.println("Would you like to check for more circles (y/n)?");
+            System.out.println("\nWould you like to check for more circles (y/n)?");
             if(!yesOrNo()) {
-                System.out.println("Returning to main menu.\n");
+                System.out.println("\nReturning to main menu.\n");
                 return;
             }
         }
@@ -489,12 +495,12 @@ public class UserInteractions implements OutputInterface, InputInterface
     private boolean checkForExistedOrEmptyGraph() {
         if (graph == null) {
             System.out.println("Please load a graph first!");
-            System.out.println("Returning to main menu.\n");
+            System.out.println("\nReturning to main menu.\n");
             return true;
         }
         else if (graph.isEmpty()) {
             System.out.println("The graph is empty!");
-            System.out.println("Returning to main menu.\n");
+            System.out.println("\nReturning to main menu.\n");
             return true;
         }
         return false;

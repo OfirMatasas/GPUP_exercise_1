@@ -7,8 +7,8 @@ import java.util.Set;
 
 public class Target implements Serializable {
     //--------------------------------------------------Enums-------------------------------------------------------//
-    static public enum TargetProperty { LEAF, MIDDLE, ROOT, INDEPENDENT }
-    static public enum Connection { REQUIRED_FOR, DEPENDS_ON }
+    public enum TargetProperty { LEAF, MIDDLE, ROOT, INDEPENDENT }
+    public enum Connection { REQUIRED_FOR, DEPENDS_ON }
 
     //--------------------------------------------------Members-----------------------------------------------------//
     private final Set<Target> dependsOnTargets;

@@ -1,4 +1,4 @@
-package userInterface;
+package Summaries;
 
 import target.Target;
 import java.io.Serializable;
@@ -10,6 +10,8 @@ import java.util.Set;
 
 public class TargetSummary implements Serializable
 {
+
+    private Boolean isRoot;
     //--------------------------------------------------Enums-------------------------------------------------------//
     public enum RuntimeStatus { Frozen, Skipped, Waiting, InProcess, Finished }
     public enum ResultStatus { Success, Warning, Failure }
@@ -35,6 +37,7 @@ public class TargetSummary implements Serializable
         this.runtimeStatus = RuntimeStatus.Frozen;
         this.isSkipped = false;
         this.openedTargets = new HashSet<>();
+        this.isRoot = false;
     }
 
     //--------------------------------------------------Getters-----------------------------------------------------//
@@ -78,6 +81,10 @@ public class TargetSummary implements Serializable
         return openedTargets;
     }
 
+    public Boolean getRoot() {
+        return this.isRoot;
+    }
+
     //--------------------------------------------------Setters-----------------------------------------------------//
     public void setRunning(boolean running) {
         this.running = running;
@@ -99,6 +106,14 @@ public class TargetSummary implements Serializable
         this.resultStatus = resultStatus;
     }
 
+    public void setRoot(Boolean root) {
+        isRoot = root;
+    }
+
+    public void setOpenedTargetsToZero()
+    {
+        this.openedTargets.clear();
+    }
 
     //--------------------------------------------------Methods-----------------------------------------------------//
     public void startTheClock()
